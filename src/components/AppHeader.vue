@@ -1,0 +1,113 @@
+<template>
+
+    <nav>
+
+      <v-snackbar v-model="snackbar" :timeout="4000" top color="success">
+        <span>New project added!</span>
+        <v-btn flat color="white" @click="snackbar = false">Close</v-btn>
+      </v-snackbar>
+
+      <v-toolbar flat app>
+        <v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+
+        <router-link to="/">
+          <v-toolbar-title class="text-uppercase grey--text">
+            <span class="font-weight-light">Novel</span>
+            <span>Docs</span>
+          </v-toolbar-title>
+        </router-link>
+        <v-spacer></v-spacer>
+        
+        <GoogleSignInButton v-if="!isAuthenticated"
+          @success="handleLoginSuccess"
+          @error="handleLoginError"
+        ></GoogleSignInButton>
+
+      </v-toolbar>
+
+      <v-navigation-drawer v-model="drawer" temporary class="primary" v-if="isAuthenticated">
+        <v-list>
+          <v-list-item
+              :prepend-avatar="picture"
+              :title="name"
+              :subtitle="email"
+            ></v-list-item>
+        </v-list>
+        <v-divider></v-divider>
+        <v-list>
+          <v-list-tile v-for="link in links" :key="link.text">
+            <router-link :to="link.route">
+              <v-list-tile-action>
+                <v-icon class="white--text">{{ link.icon }}</v-icon>
+              </v-list-tile-action>
+              <v-list-tile-content>
+                <v-list-tile-title class="white--text">{{ link.text }}</v-list-tile-title>
+              </v-list-tile-content>
+            </router-link>
+          </v-list-tile>
+        </v-list>
+
+      </v-navigation-drawer>
+
+    </nav>
+
+</template>
+
+<script>
+import { GoogleSignInButton, useOneTap, decodeCredential } from "vue3-google-signin"
+
+export default {
+  data: () => ({
+      drawer: false,
+      links: [
+        { icon: 'mdi-email', text: 'Projects', route: '/projects'},
+      ],  
+      snackbar: false,
+      credentials: null,
+      isAuthenticated: false,
+      picture: "",
+      name: "",
+      email: "",
+  }),
+
+  computed: {
+    userData() {
+      var decoded = {}
+      try{
+        decoded = decodeCredential(this.credential)
+      }catch(err){
+        //
+      }
+      console.log("Get userData", decoded)
+      return decoded
+    }
+  },
+  mounted(){
+    useOneTap({
+      onSuccess: this.handleLoginSuccess,
+      onError: this.handleLoginError,
+    })
+  },
+  methods: {
+    logout(response){
+      console.log("logout")
+      gapi.auth2.getAuthInstance().revokeAccess();
+      this.isAuthenticated = false
+      console.log("logged out")
+    },
+    handleLoginSuccess(response){
+      const { credential } = response;
+      console.log("Access Token", credential);
+      this.credential = credential
+      let decoded = decodeCredential(this.credential);
+      this.name = decoded.given_name
+      this.picture = decoded.picture
+      this.email = decoded.email
+      this.isAuthenticated = true
+    },
+    handleLoginError (){
+      console.error("Login failed");
+    }
+  }
+};
+</script>
