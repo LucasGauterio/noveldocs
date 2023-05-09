@@ -93,6 +93,7 @@ export default {
       try {
         return decodeCredential(this.getEncodedCredential())  
       } catch (error) {
+        console.error(error)
         return null
       }
     },
