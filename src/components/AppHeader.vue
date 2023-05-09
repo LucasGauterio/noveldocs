@@ -72,15 +72,11 @@ export default {
   }),
 
   computed: {
-    userData() {
-      var decoded = {}
-      try{
-        decoded = decodeCredential(this.credential)
-      }catch(err){
-        //
-      }
-      console.log("Get userData", decoded)
-      return decoded
+    isAuthenticated() {
+      let credential = this.getDecodedCredential()
+      let hasCredential = credential !== null && credential !== undefined && credential.email !== undefined
+      console.log("isAuthenticated",hasCredential)
+      return hasCredential
     }
   },
   mounted(){
@@ -89,7 +85,16 @@ export default {
       onError: this.handleLoginError,
     })
   },
-  methods: {
+  methods: {    
+    getEncodedCredential() {
+      return localStorage.getItem("credential")
+    },
+    getDecodedCredential() {
+      return decodeCredential(this.getEncodedCredential())
+    },
+    setCredential(credential) {
+      return localStorage.setItem("credential", credential)
+    },
     logout(response){
       console.log("logout")
       gapi.auth2.getAuthInstance().revokeAccess();
@@ -98,9 +103,10 @@ export default {
     },
     handleLoginSuccess(response){
       const { credential } = response;
-      console.log("Access Token", credential);
-      this.credential = credential
-      let decoded = decodeCredential(this.credential);
+      console.log("credential", credential);
+      this.setCredential(credential)
+      let decoded = this.getDecodedCredential();
+      console.log("credential", decoded);
       this.name = decoded.given_name
       this.picture = decoded.picture
       this.email = decoded.email

@@ -42,6 +42,11 @@ export default {
     methods: {
         askPermission() {
             if (this.bGisLoaded && this.bGapiLoaded) {
+                let accessToken = localStorage.getItem("accessToken");
+                if(accessToken){
+                    console.log("session token", accessToken);
+                    gapi.client.setToken(accessToken);
+                }
                 if (gapi.client.getToken() === null) {
                     // Prompt the user to select a Google Account and ask for consent to share their data
                     // when establishing a new session.
@@ -70,6 +75,9 @@ export default {
             }
             console.log("authCallback", JSON.stringify(resp));
             console.log("getAuthInstance", JSON.stringify(gapi.auth2.getAuthInstance()));
+
+            localStorage.setItem("accessToken",resp.access_token);
+
             await this.listFiles();
         },
         gisLoaded() {
