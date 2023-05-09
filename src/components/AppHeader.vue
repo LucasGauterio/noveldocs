@@ -28,9 +28,9 @@
       <v-navigation-drawer v-model="drawer" temporary class="primary" v-if="isAuthenticated">
         <v-list>
           <v-list-item
-              :prepend-avatar="picture"
-              :title="name"
-              :subtitle="email"
+              :prepend-avatar="userData.picture"
+              :title="userData.name"
+              :subtitle="userData.email"
             ></v-list-item>
         </v-list>
         <v-divider></v-divider>
@@ -64,11 +64,6 @@ export default {
         { icon: 'mdi-email', text: 'Projects', route: '/projects'},
       ],  
       snackbar: false,
-      credentials: null,
-      isAuthenticated: false,
-      picture: "",
-      name: "",
-      email: "",
   }),
 
   computed: {
@@ -77,6 +72,9 @@ export default {
       let hasCredential = credential !== null && credential !== undefined && credential.email !== undefined
       console.log("isAuthenticated",hasCredential)
       return hasCredential
+    },
+    userData() {
+      return this.getDecodedCredential()
     }
   },
   mounted(){
@@ -110,12 +108,6 @@ export default {
       const { credential } = response;
       console.log("credential", credential);
       this.setCredential(credential)
-      let decoded = this.getDecodedCredential();
-      console.log("credential", decoded);
-      this.name = decoded.given_name
-      this.picture = decoded.picture
-      this.email = decoded.email
-      this.isAuthenticated = true
     },
     handleLoginError (){
       console.error("Login failed");
