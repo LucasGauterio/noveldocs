@@ -90,7 +90,11 @@ export default {
       return localStorage.getItem("credential")
     },
     getDecodedCredential() {
-      return decodeCredential(this.getEncodedCredential())
+      try {
+        return decodeCredential(this.getEncodedCredential())  
+      } catch (error) {
+        return null
+      }
     },
     setCredential(credential) {
       return localStorage.setItem("credential", credential)
