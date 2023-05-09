@@ -11,7 +11,7 @@
         <v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
 
         <router-link to="/">
-          <v-toolbar-title class="text-uppercase grey--text">
+          <v-toolbar-title class="text-uppercase">
             <span class="font-weight-light">Novel</span>
             <span>Docs</span>
           </v-toolbar-title>
@@ -52,7 +52,8 @@
     </nav>
 
 </template>
-
+<style>
+ </style>
 <script>
 import { GoogleSignInButton, useOneTap, decodeCredential } from "vue3-google-signin"
 

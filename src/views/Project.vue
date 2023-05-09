@@ -3,7 +3,11 @@
     <v-bottom-navigation
       bg-color="indigo"
     >
-  <create-project-form></create-project-form>
+      <v-btn color="accent" large @click.stop="createProjectDialog=true">
+        <v-icon>mdi-plus</v-icon>
+
+        Create a new project
+      </v-btn>
     </v-bottom-navigation>
   </v-layout>
   <v-list>
@@ -18,6 +22,8 @@
       </v-card>
     </v-list-tile>
   </v-list>
+  <create-project-form :createProjectDialog="createProjectDialog">
+  </create-project-form>
 </template>
 
 <script>
@@ -32,7 +38,8 @@ export default {
         SCOPES: import.meta.env.VITE_SCOPES,
         bGapiLoaded: false,
         bGisLoaded: false,
-        projects: []
+        projects: [],
+        createProjectDialog: false,
     }),
     mounted() {
         this.loadGoogleScripts();
