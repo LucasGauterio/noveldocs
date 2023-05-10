@@ -4,6 +4,10 @@
       bg-color="indigo"
     >
   <create-project-form></create-project-form>
+  <v-btn @click.stop="listFiles">
+                <v-icon>mdi-refresh</v-icon>
+                Refresh
+            </v-btn>
     </v-bottom-navigation>
   </v-layout>
   <v-list>
@@ -129,6 +133,8 @@ export default {
             }
             // Flatten to string to display
             this.projects = files.filter(file => file.name.includes("noveldocs_project_")).map((file) => ({ ...file, title: file.name.replace("noveldocs_project_", "") }));
+            const outputFolder = files.filter(file => file.name === "noveldocs_").reduce((str, file) => `${str}${file.name} (${file.id})\n`, "Folder:\n");
+            console.log(outputFolder);
             const output = this.projects.reduce((str, file) => `${str}${file.name} (${file.id})\n`, "Files:\n");
             console.log(output);
         },
