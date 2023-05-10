@@ -1,6 +1,7 @@
 // Plugins
 import vue from '@vitejs/plugin-vue'
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
+import fs from 'fs'
 
 // Utilities
 import { defineConfig } from 'vite'
@@ -37,5 +38,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    https: {
+      key: fs.readFileSync('./security/cert.key'),
+      cert: fs.readFileSync('./security/cert.pem')
+    },
   },
 })
