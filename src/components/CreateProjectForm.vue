@@ -1,12 +1,11 @@
 <template>
-    <v-dialog transition="dialog-top-transition" width="auto">
+    <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent>
         <template v-slot:activator="{ props }">
             <v-btn v-bind="props" @click.stop="resetSteps">
                 <v-icon>mdi-plus</v-icon>
                 Create a new project
             </v-btn>
         </template>
-        <template v-slot:default="{ isActive }">
             <v-card class="mx-auto" max-width="500">
                 <v-card-title class="text-h6 font-weight-regular justify-space-between">
                     <v-avatar color="primary" size="24" v-text="step"></v-avatar>
@@ -16,7 +15,7 @@
                 <v-window v-model="step">
                     <v-window-item :value="1">
                         <v-card-text>
-                            <v-text-field label="Project name" placeholder="My book"></v-text-field>
+                            <v-text-field label="Project name" placeholder="My book" v-model="projectName"></v-text-field>
                             <span class="text-caption text-grey-darken-1">
                                 This is only the project name, not necessarily the book title
                             </span>
@@ -46,18 +45,28 @@
 
                     <v-window-item :value="4">
                         <div class="pa-4 text-center">
+                            <v-progress-circular color="blue-lighten-3" indeterminate :size="54"
+                                :width="12"></v-progress-circular>
+                            <h3 class="text-h6 font-weight-light mb-2">
+                                Creating new project
+                            </h3>
+                            <span class="text-caption text-grey">{{ currentAction }}</span>
+                        </div>
+                    </v-window-item>
+
+                    <v-window-item :value="5">
+                        <div class="pa-4 text-center">
                             <v-icon color="blue-lighten-2" icon="mdi-thumb-up" size="x-large" variant="text"></v-icon>
                             <h3 class="text-h6 font-weight-light mb-2">
                                 New project created
                             </h3>
-                            <span class="text-caption text-grey">It's time to start writing!</span>
                         </div>
                     </v-window-item>
                 </v-window>
 
-                <v-divider></v-divider>
+                <v-divider v-if="step !== 4"></v-divider>
 
-                <v-card-actions>
+                <v-card-actions v-if="step !== 4">
                     <v-btn v-if="step > 1 && step < 4" variant="text" @click="step--">
                         Back
                     </v-btn>
@@ -65,11 +74,11 @@
                     <v-btn v-if="step < 3" color="primary" variant="flat" @click="step++">
                         Next
                     </v-btn>
-                    <v-btn v-if="step === 3" color="primary" variant="flat" @click="step++">
+                    <v-btn v-if="step === 3" color="primary" variant="flat" @click="createProject">
                         Done
                     </v-btn>
-                    <v-btn v-if="step === 4" color="primary" variant="flat" block>
-                        <router-link to="/projects">
+                    <v-btn v-if="step === 5" color="primary" variant="flat" block>
+                        <router-link to="/projects" @click.stop="this.dialog = false">
                             <v-list-tile-action>
                                 <v-icon class="white--text">mdi-book</v-icon>
                             </v-list-tile-action>
@@ -80,7 +89,6 @@
                     </v-btn>
                 </v-card-actions>
             </v-card>
-        </template>
     </v-dialog>
 </template>
 
@@ -95,6 +103,8 @@ export default {
         finishPublishDate: '',
         wordCount: 0,
         createProjectDialog: false,
+        currentAction: '',
+        dialog: false
     }),
 
     computed: {
@@ -103,21 +113,132 @@ export default {
                 case 1: return 'Naming'
                 case 2: return 'Description'
                 case 3: return 'Goals'
-                case 999: return 'Error'
                 default: return 'Success'
             }
         },
     },
     methods: {
         resetSteps() {
-            this.step=1
-            this.projectName=''
-            this.description=''
-            this.finishWritingDate=''
-            this.finishEditingDate=''
-            this.finishPublishDate=''
-            this.wordCount=0
+            this.step = 1
+            this.projectName = ''
+            this.description = ''
+            this.finishWritingDate = ''
+            this.finishEditingDate = ''
+            this.finishPublishDate = ''
+            this.wordCount = 0
         },
+        async createProject() {
+            this.step++
+            this.currentAction = "creating project folder"
+            console.log(this.currentAction)
+            let response;
+            try {
+                var fileMetadata = {
+                    'name': 'noveldocs_project_' + this.projectName,
+                    'mimeType': 'application/vnd.google-apps.folder',
+                    'parents': ['1hiBOUViC-pVYSuM5GCvgQ5yMIFXjseaH']
+                };
+                response = await gapi.client.drive.files.create({
+                    resource: fileMetadata,
+                    fields: "id"
+                });
+                console.log("response", JSON.stringify(response))
+                const projectId = response.result.id
+                await this.createDocument(projectId, this.projectName)
+                await this.createProjectData(projectId)
+                await this.createSubfolder(projectId, "chapters")
+                await this.createSubfolder(projectId, "scenes")
+                await this.createSubfolder(projectId, "locations")
+                await this.createSubfolder(projectId, "characters")
+
+                this.currentAction = "project created"
+                console.log(this.currentAction)
+                this.step++
+            }
+            catch (err) {
+                console.log(err.message);
+                this.currentAction = "error creating project"
+                console.log(this.currentAction)
+                this.dialog = false
+                return;
+            }
+
+        },
+        async createDocument(id) {
+            this.currentAction = `creating document`
+            console.log(this.currentAction)
+            let response;
+            try {
+                var fileMetadata = {
+                    'name': `noveldocs_${id}_document`,
+                    'mimeType': 'application/vnd.google-apps.document',
+                    'parents': [id]
+                };
+                response = await gapi.client.drive.files.create({
+                    resource: fileMetadata,
+                    fields: "id"
+                });
+                console.log("response", JSON.stringify(response))
+            }
+            catch (err) {
+                console.log(err.message);
+                return;
+            }
+            console.log(`Document ${this.projectName} created`)
+        },
+        async createProjectData(id) {
+            this.currentAction = `saving project data`
+            console.log(this.currentAction)
+            let response;
+            try {
+                const data = {
+                    projectName: this.projectName,
+                    description: this.description,
+                    finishWritingDate: this.finishWritingDate,
+                    finishEditingDate: this.finishEditingDate,
+                    finishPublishDate: this.finishPublishDate,
+                    wordGoal: this.wordGoal
+                };
+                var fileMetadata = {
+                    'name': `noveldocs_${id}_data.json`,
+                    'mimeType': 'application/json',
+                    'parents': [id],
+                    'content': JSON.stringify(data)
+                }
+                response = await gapi.client.drive.files.create({
+                    resource: fileMetadata,
+                    fields: "id"
+                });
+                console.log("response", JSON.stringify(response))
+            }
+            catch (err) {
+                console.log(err.message);
+                return;
+            }
+            console.log(`project data saved`)
+        },
+        async createSubfolder(id, type) {
+            this.currentAction = `creating ${type} folder`
+            console.log(this.currentAction)
+            let response;
+            try {
+                var fileMetadata = {
+                    'name': `noveldocs_${id}_${type}`,
+                    'mimeType': 'application/vnd.google-apps.folder',
+                    'parents': [id]
+                };
+                response = await gapi.client.drive.files.create({
+                    resource: fileMetadata,
+                    fields: "id"
+                });
+                console.log("response", JSON.stringify(response))
+            }
+            catch (err) {
+                console.log(err.message);
+                return;
+            }
+            console.log(`Folder ${type} created`)
+        }
     }
 }
 </script>
