@@ -6,89 +6,89 @@
                 Create a new project
             </v-btn>
         </template>
-            <v-card class="mx-auto" max-width="500">
-                <v-card-title class="text-h6 font-weight-regular justify-space-between">
-                    <v-avatar color="primary" size="24" v-text="step"></v-avatar>
-                    <span>{{ currentTitle }}</span>
-                </v-card-title>
+        <v-card class="mx-auto" max-width="500">
+            <v-card-title class="text-h6 font-weight-regular justify-space-between">
+                <v-avatar color="primary" size="24" v-text="step"></v-avatar>
+                <span>{{ currentTitle }}</span>
+            </v-card-title>
 
-                <v-window v-model="step">
-                    <v-window-item :value="1">
-                        <v-card-text>
-                            <v-text-field label="Project name" placeholder="My book" v-model="projectName"></v-text-field>
-                            <span class="text-caption text-grey-darken-1">
-                                This is only the project name, not necessarily the book title
-                            </span>
-                        </v-card-text>
-                    </v-window-item>
+            <v-window v-model="step">
+                <v-window-item :value="1">
+                    <v-card-text>
+                        <v-text-field label="Project name" placeholder="My book" v-model="projectName"></v-text-field>
+                        <span class="text-caption text-grey-darken-1">
+                            This is only the project name, not necessarily the book title
+                        </span>
+                    </v-card-text>
+                </v-window-item>
 
-                    <v-window-item :value="2">
-                        <v-card-text>
-                            <v-text-field label="Description"></v-text-field>
-                            <span class="text-caption text-grey-darken-1">
-                                Brief description about the project
-                            </span>
-                        </v-card-text>
-                    </v-window-item>
+                <v-window-item :value="2">
+                    <v-card-text>
+                        <v-text-field label="Description"></v-text-field>
+                        <span class="text-caption text-grey-darken-1">
+                            Brief description about the project
+                        </span>
+                    </v-card-text>
+                </v-window-item>
 
-                    <v-window-item :value="3">
-                        <v-card-text>
-                            <v-text-field label="Finish writing date" type="date"></v-text-field>
-                            <v-text-field label="Finish editing date" type="date"></v-text-field>
-                            <v-text-field label="Publish date" type="date"></v-text-field>
-                            <v-text-field label="Word count" type="number"></v-text-field>
-                            <span class="text-caption text-grey-darken-1">
-                                Your project goals
-                            </span>
-                        </v-card-text>
-                    </v-window-item>
+                <v-window-item :value="3">
+                    <v-card-text>
+                        <v-text-field label="Finish writing date" type="date"></v-text-field>
+                        <v-text-field label="Finish editing date" type="date"></v-text-field>
+                        <v-text-field label="Publish date" type="date"></v-text-field>
+                        <v-text-field label="Word count" type="number"></v-text-field>
+                        <span class="text-caption text-grey-darken-1">
+                            Your project goals
+                        </span>
+                    </v-card-text>
+                </v-window-item>
 
-                    <v-window-item :value="4">
-                        <div class="pa-4 text-center">
-                            <v-progress-circular color="blue-lighten-3" indeterminate :size="54"
-                                :width="12"></v-progress-circular>
-                            <h3 class="text-h6 font-weight-light mb-2">
-                                Creating new project
-                            </h3>
-                            <span class="text-caption text-grey">{{ currentAction }}</span>
-                        </div>
-                    </v-window-item>
+                <v-window-item :value="4">
+                    <div class="pa-4 text-center">
+                        <v-progress-circular color="blue-lighten-3" indeterminate :size="54"
+                            :width="12"></v-progress-circular>
+                        <h3 class="text-h6 font-weight-light mb-2">
+                            Creating new project
+                        </h3>
+                        <span class="text-caption text-grey">{{ currentAction }}</span>
+                    </div>
+                </v-window-item>
 
-                    <v-window-item :value="5">
-                        <div class="pa-4 text-center">
-                            <v-icon color="blue-lighten-2" icon="mdi-thumb-up" size="x-large" variant="text"></v-icon>
-                            <h3 class="text-h6 font-weight-light mb-2">
-                                New project created
-                            </h3>
-                        </div>
-                    </v-window-item>
-                </v-window>
+                <v-window-item :value="5">
+                    <div class="pa-4 text-center">
+                        <v-icon color="blue-lighten-2" icon="mdi-thumb-up" size="x-large" variant="text"></v-icon>
+                        <h3 class="text-h6 font-weight-light mb-2">
+                            New project created
+                        </h3>
+                    </div>
+                </v-window-item>
+            </v-window>
 
-                <v-divider v-if="step !== 4"></v-divider>
+            <v-divider v-if="step !== 4"></v-divider>
 
-                <v-card-actions v-if="step !== 4">
-                    <v-btn v-if="step > 1 && step < 4" variant="text" @click="step--">
-                        Back
-                    </v-btn>
-                    <v-spacer v-if="step < 4"></v-spacer>
-                    <v-btn v-if="step < 3" color="primary" variant="flat" @click="step++">
-                        Next
-                    </v-btn>
-                    <v-btn v-if="step === 3" color="primary" variant="flat" @click="createProject">
-                        Done
-                    </v-btn>
-                    <v-btn v-if="step === 5" color="primary" variant="flat" block>
-                        <router-link to="/projects" @click.stop="this.dialog = false">
-                            <v-list-tile-action>
-                                <v-icon class="white--text">mdi-book</v-icon>
-                            </v-list-tile-action>
-                            <v-list-tile-content>
-                                <v-list-tile-title class="white--text">Open project</v-list-tile-title>
-                            </v-list-tile-content>
-                        </router-link>
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
+            <v-card-actions v-if="step !== 4">
+                <v-btn v-if="step > 1 && step < 4" variant="text" @click="step--">
+                    Back
+                </v-btn>
+                <v-spacer v-if="step < 4"></v-spacer>
+                <v-btn v-if="step < 3" color="primary" variant="flat" @click="step++">
+                    Next
+                </v-btn>
+                <v-btn v-if="step === 3" color="primary" variant="flat" @click="createProject">
+                    Done
+                </v-btn>
+                <v-btn v-if="step === 5" color="primary" variant="flat" block>
+                    <router-link :to="'/project/' + this.projectId" @click.stop="this.dialog = false">
+                        <v-list-tile-action>
+                            <v-icon class="white--text">mdi-book</v-icon>
+                        </v-list-tile-action>
+                        <v-list-tile-content>
+                            <v-list-tile-title class="white--text">Open project</v-list-tile-title>
+                        </v-list-tile-content>
+                    </router-link>
+                </v-btn>
+            </v-card-actions>
+        </v-card>
     </v-dialog>
 </template>
 
@@ -104,7 +104,8 @@ export default {
         wordCount: 0,
         createProjectDialog: false,
         currentAction: '',
-        dialog: false
+        dialog: false,
+        projectId: ''
     }),
 
     computed: {
@@ -143,13 +144,13 @@ export default {
                     fields: "id"
                 });
                 console.log("response", JSON.stringify(response))
-                const projectId = response.result.id
-                await this.createDocument(projectId, this.projectName)
-                await this.createProjectData(projectId)
-                await this.createSubfolder(projectId, "chapters")
-                await this.createSubfolder(projectId, "scenes")
-                await this.createSubfolder(projectId, "locations")
-                await this.createSubfolder(projectId, "characters")
+                this.projectId = response.result.id
+                await this.createDocument(this.projectId, this.projectName)
+                await this.createProjectData(this.projectId)
+                await this.createSubfolder(this.projectId, "chapters")
+                await this.createSubfolder(this.projectId, "scenes")
+                await this.createSubfolder(this.projectId, "locations")
+                await this.createSubfolder(this.projectId, "characters")
 
                 this.currentAction = "project created"
                 console.log(this.currentAction)
@@ -172,7 +173,8 @@ export default {
                 var fileMetadata = {
                     'name': `noveldocs_${id}_document`,
                     'mimeType': 'application/vnd.google-apps.document',
-                    'parents': [id]
+                    'parents': [id],
+                    'publishAuto': true
                 };
                 response = await gapi.client.drive.files.create({
                     resource: fileMetadata,
@@ -189,26 +191,37 @@ export default {
         async createProjectData(id) {
             this.currentAction = `saving project data`
             console.log(this.currentAction)
-            let response;
             try {
-                const data = {
+                const content = {
                     projectName: this.projectName,
                     description: this.description,
                     finishWritingDate: this.finishWritingDate,
                     finishEditingDate: this.finishEditingDate,
                     finishPublishDate: this.finishPublishDate,
-                    wordGoal: this.wordGoal
-                };
-                var fileMetadata = {
-                    'name': `noveldocs_${id}_data.json`,
-                    'mimeType': 'application/json',
-                    'parents': [id],
-                    'content': JSON.stringify(data)
+                    wordGoal: this.wordGoal,
                 }
-                response = await gapi.client.drive.files.create({
-                    resource: fileMetadata,
-                    fields: "id"
-                });
+
+                const jsonContent = JSON.stringify(content);
+                console.log('content', jsonContent)
+
+                var file = new Blob([jsonContent], {type: 'text/plain'})
+                var metadata = {
+                    'name': `noveldocs_${id}_data.json`,
+                    'mimeType': 'text/plain', 
+                    'parents': [id], 
+                }
+
+                var accessToken = gapi.auth.getToken().access_token
+                var form = new FormData()
+                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }))
+                form.append('file', file)
+
+                let response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+                    method: 'POST',
+                    headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
+                    body: form,
+                })
+
                 console.log("response", JSON.stringify(response))
             }
             catch (err) {
