@@ -61,7 +61,7 @@ export default {
   data: () => ({
       drawer: false,
       links: [
-        { icon: 'mdi-email', text: 'Projects', route: '/projects'},
+        { icon: 'mdi-book', text: 'Projects', route: '/projects'},
       ],  
       snackbar: false,
   }),
@@ -83,7 +83,7 @@ export default {
       onError: this.handleLoginError,
     })
   },
-  methods: {    
+  methods: {
     getEncodedCredential() {
       return localStorage.getItem("credential")
     },

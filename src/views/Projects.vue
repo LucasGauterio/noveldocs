@@ -16,7 +16,9 @@
         <v-card-actions>
           <v-btn variant="tonal" color="red">Delete</v-btn>
           <v-col class="text-right">
-            <v-btn variant="tonal" color="blue" >Open</v-btn>
+            <router-link :to="'/project/' + project.id">
+                <v-btn variant="tonal" color="blue">Open</v-btn>
+            </router-link>
           </v-col>
         </v-card-actions>
       </v-card>
