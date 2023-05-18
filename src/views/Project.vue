@@ -1,6 +1,10 @@
 <template>
     <v-layout class="overflow-visible" style="height: 56px;">
         <v-bottom-navigation bg-color="indigo">
+            <v-btn @click.stop="navigateToProjects">
+                <v-icon>mdi-book-alphabet</v-icon>
+                Projects
+            </v-btn>
             <v-btn @click.stop="findDocument">
                 <v-icon>mdi-book-open-variant</v-icon>
                 Book
@@ -76,6 +80,9 @@ export default {
         }
     },
     methods: {
+        navigateToProjects() {
+            this.$router.push('/projects');
+        },
         async findDocument() {
             let response;
             try {
