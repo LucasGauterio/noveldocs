@@ -7,7 +7,7 @@
         What is NovelDocs?
       </h1>
       <h4 class="subheading text-center">
-        NovelDocs is a application that helps it's users to organize the novels they are writing. <br>
+        NovelDocs is an app that helps it's users to organize the novels they are writing. <br>
       </h4>
     </div>
   </v-parallax>

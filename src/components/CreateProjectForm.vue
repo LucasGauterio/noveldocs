@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent>
+    <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent @input="handleModalInput">
         <template v-slot:activator="{ props }">
             <v-btn v-bind="props" @click.stop="resetSteps">
                 <v-icon>mdi-plus</v-icon>
@@ -33,10 +33,10 @@
 
                 <v-window-item :value="3">
                     <v-card-text>
-                        <v-text-field label="Finish writing date" type="date"></v-text-field>
-                        <v-text-field label="Finish editing date" type="date"></v-text-field>
-                        <v-text-field label="Publish date" type="date"></v-text-field>
-                        <v-text-field label="Word count" type="number"></v-text-field>
+                        <v-text-field label="Finish writing date" type="date" v-model="finishWritingDate"></v-text-field>
+                        <v-text-field label="Finish editing date" type="date" v-model="finishEditingDate"></v-text-field>
+                        <v-text-field label="Publish date" type="date" v-model="finishPublishDate"></v-text-field>
+                        <v-text-field label="Word count" type="number" v-model="wordCount"></v-text-field>
                         <span class="text-caption text-grey-darken-1">
                             Your project goals
                         </span>
@@ -78,7 +78,7 @@
                     Done
                 </v-btn>
                 <v-btn v-if="step === 5" color="primary" variant="flat" block>
-                    <router-link :to="'/project/' + this.projectId" @click.stop="this.dialog = false">
+                    <router-link :to="'/project/' + this.projectId" @click.stop="close">
                         <v-list-tile-action>
                             <v-icon class="white--text">mdi-book</v-icon>
                         </v-list-tile-action>
@@ -119,6 +119,10 @@ export default {
         },
     },
     methods: {
+        close() {
+            this.dialog = false;
+            this.$emit('modalClosed');
+        },
         resetSteps() {
             this.step = 1
             this.projectName = ''
