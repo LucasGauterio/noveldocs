@@ -32,6 +32,7 @@ import CreateProjectForm from '@/components/CreateProjectForm.vue';
 import DeleteProjectForm from '@/components/DeleteProjectForm.vue';
 
 export default {
+    components: { CreateProjectForm, DeleteProjectForm },
     data: () => ({
         tokenClient: null,
         CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID,
@@ -146,6 +147,5 @@ export default {
             console.log(output);
         },
     },
-    components: { CreateProjectForm, DeleteProjectForm }
 }
 </script>
