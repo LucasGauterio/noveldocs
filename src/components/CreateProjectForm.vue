@@ -67,14 +67,17 @@
             <v-divider v-if="step !== 4"></v-divider>
 
             <v-card-actions v-if="step !== 4">
-                <v-btn v-if="step > 1 && step < 4" variant="text" @click="step--">
+                <v-btn v-if="step <= 3" @click="close">
+                    Cancel
+                </v-btn>
+                <v-btn v-if="step > 1 && step < 4" @click="step--">
                     Back
                 </v-btn>
                 <v-spacer v-if="step < 4"></v-spacer>
-                <v-btn v-if="step < 3" color="primary" variant="flat" @click="step++">
+                <v-btn v-if="step < 3" @click="step++">
                     Next
                 </v-btn>
-                <v-btn v-if="step === 3" color="primary" variant="flat" @click="createProject">
+                <v-btn v-if="step === 3" variant="flat" @click="createProject">
                     Done
                 </v-btn>
                 <v-btn v-if="step === 5" color="primary" variant="flat" block>

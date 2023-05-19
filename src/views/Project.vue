@@ -5,30 +5,30 @@
                 <v-icon>mdi-book-alphabet</v-icon>
                 Projects
             </v-btn>
-            <v-btn @click.stop="findDocument">
+            <v-btn @click.stop="view = 'book'">
                 <v-icon>mdi-book-open-variant</v-icon>
                 Book
             </v-btn>
-            <v-btn>
+            <v-btn @click.stop="view = 'characters'">
                 <v-icon>mdi-account-group</v-icon>
                 Characters
             </v-btn>
-            <v-btn>
+            <v-btn @click.stop="view = 'locations'">
                 <v-icon>mdi-city</v-icon>
                 Locations
             </v-btn>
-            <v-btn>
+            <v-btn @click.stop="view = 'Chapters'">
                 <v-icon>mdi-format-list-numbered</v-icon>
                 Chapters
             </v-btn>
-            <v-btn>
+            <v-btn @click.stop="view = 'Scenes'">
                 <v-icon>mdi-movie-open-edit</v-icon>
                 Scenes
             </v-btn>
         </v-bottom-navigation>
     </v-layout>
     <v-container fluid v-if="projectMetadata">
-        <v-card class="mx-auto document-card" height="calc(100vh - 200px)">
+        <v-card class="mx-auto document-card" height="calc(100vh - 200px)" v-if="view === 'book'">
             <v-card-title>{{ this.projectMetadata.projectName }}</v-card-title>
             <v-card-text class="iframe-wrapper">
                 <iframe
@@ -36,6 +36,7 @@
                     style="width: 100%; height: 100%" frameborder="0" allowfullscreen></iframe>
             </v-card-text>
         </v-card>
+        <character-list v-if="view === 'characters'"></character-list>
     </v-container>
 </template>
 <style>
@@ -49,8 +50,12 @@
 }
 </style>
 <script>
+import CharacterList from '@/components/CharacterList.vue';
 export default {
+    components: { CharacterList },
     data: () => ({
+        view: 'book',
+        bookLoaded: false,
         documentFile: null,
         metadataFile: null,
         projectMetadata: null,
@@ -84,6 +89,7 @@ export default {
             this.$router.push('/projects');
         },
         async findDocument() {
+            this.view = 'book';
             let response;
             try {
                 response = await gapi.client.drive.files.list({
@@ -92,13 +98,13 @@ export default {
                 });
             }
             catch (err) {
-                console.log(err.message);
-                return;
+                console.log(err.message)
+                return
             }
             const files = response.result.files
             if (!files || files.length == 0) {
                 console.log("No files found.")
-                return;
+                return
             }
             // Flatten to string to display
             this.documentFile = files.find(file => file.name === `noveldocs_${this.projectId}_document`)
@@ -112,9 +118,10 @@ export default {
                     alt: 'media'
                 })
                 // Parse the JSON content as an object
-                this.projectMetadata = JSON.parse(response.body);
+                this.projectMetadata = JSON.parse(response.body)
                 // Use the JSON content in your application
-                console.log(this.projectMetadata);
+                console.log(this.projectMetadata)
+                this.bookLoaded = true
             }catch(err){
                 console.log(err.message);
                 return;
