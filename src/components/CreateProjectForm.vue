@@ -24,7 +24,7 @@
 
                 <v-window-item :value="2">
                     <v-card-text>
-                        <v-text-field label="Description"></v-text-field>
+                        <v-text-field label="Description" v-model="description"></v-text-field>
                         <span class="text-caption text-grey-darken-1">
                             Brief description about the project
                         </span>
@@ -81,7 +81,7 @@
                     Done
                 </v-btn>
                 <v-btn v-if="step === 5" color="primary" variant="flat" block>
-                    <router-link :to="'/project/' + this.projectId" @click.stop="close">
+                    <router-link :to="'/project/' + this.projectJsonId" @click.stop="close">
                         <v-list-tile-action>
                             <v-icon class="white--text">mdi-book</v-icon>
                         </v-list-tile-action>
@@ -96,7 +96,9 @@
 </template>
 
 <script>
+import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {
+    props: ['novelDocsJsonId','novelDocsFolderId'],
     data: () => ({
         step: 1,
         projectName: '',
@@ -108,7 +110,8 @@ export default {
         createProjectDialog: false,
         currentAction: '',
         dialog: false,
-        projectId: ''
+        projectId: '',
+        projectJsonId: ''
     }),
 
     computed: {
@@ -117,6 +120,7 @@ export default {
                 case 1: return 'Naming'
                 case 2: return 'Description'
                 case 3: return 'Goals'
+                case 4: return 'Processing'
                 default: return 'Success'
             }
         },
@@ -135,29 +139,58 @@ export default {
             this.finishPublishDate = ''
             this.wordCount = 0
         },
+        async createFolder(folder, parentId){
+            this.currentAction = `creating ${folder} folder`
+            const createdFolder = await UtilsGoogleApi.createFolder( folder, parentId)
+            return createdFolder
+        },
         async createProject() {
             this.step++
             this.currentAction = "creating project folder"
             console.log(this.currentAction)
-            let response;
-            try {
-                var fileMetadata = {
-                    'name': 'noveldocs_project_' + this.projectName,
-                    'mimeType': 'application/vnd.google-apps.folder',
-                    'parents': ['1hiBOUViC-pVYSuM5GCvgQ5yMIFXjseaH']
+            try {                
+                const projectFolder = await UtilsGoogleApi.createFolder(this.projectName, this.novelDocsFolderId)
+
+                this.projectId = projectFolder.id
+
+                this.currentAction = "creating document"
+                let projectDocument = await UtilsGoogleApi.createDocument('book', this.projectId)
+                
+                var items = {
+                    folderId: this.projectId,
+                    document: { id: projectDocument.id, },
                 };
-                response = await gapi.client.drive.files.create({
-                    resource: fileMetadata,
-                    fields: "id"
-                });
-                console.log("response", JSON.stringify(response))
-                this.projectId = response.result.id
-                await this.createDocument(this.projectId, this.projectName)
-                await this.createProjectData(this.projectId)
-                await this.createSubfolder(this.projectId, "chapters")
-                await this.createSubfolder(this.projectId, "scenes")
-                await this.createSubfolder(this.projectId, "locations")
-                await this.createSubfolder(this.projectId, "characters")
+
+                //const folders = ['chapters','scenes','locations','characters']
+
+                var createdFolder = await this.createFolder('chapters', this.projectId)
+                items['chapters'] = {id: createdFolder.id, list: []}
+                createdFolder = await this.createFolder('scenes', this.projectId)
+                items['scenes'] = {id: createdFolder.id, list: []}
+                createdFolder = await this.createFolder('locations', this.projectId)
+                items['locations'] = {id: createdFolder.id, list: []}
+                createdFolder = await this.createFolder('characters', this.projectId)
+                items['characters'] = {id: createdFolder.id, list: []}
+
+                console.log('items', JSON.stringify(items))
+
+                this.currentAction = `saving project data`
+                const projectJson = await this.createProjectData(this.projectId, items)
+                this.projectJsonId = projectJson.id
+                
+                const novelDocsData = await UtilsGoogleApi.getJson(this.novelDocsJsonId)
+                novelDocsData.projects.push(
+                    {
+                        folderId: this.projectId,
+                        projectJsonId: projectJson.id,
+                        name: this.projectName
+                    }
+                )
+
+                console.log('novelDocsData',JSON.stringify(novelDocsData))
+
+                this.currentAction = `updating project list`
+                await UtilsGoogleApi.updateJson(this.novelDocsJsonId, novelDocsData)
 
                 this.currentAction = "project created"
                 console.log(this.currentAction)
@@ -172,30 +205,7 @@ export default {
             }
 
         },
-        async createDocument(id) {
-            this.currentAction = `creating document`
-            console.log(this.currentAction)
-            let response;
-            try {
-                var fileMetadata = {
-                    'name': `noveldocs_${id}_document`,
-                    'mimeType': 'application/vnd.google-apps.document',
-                    'parents': [id],
-                    'publishAuto': true
-                };
-                response = await gapi.client.drive.files.create({
-                    resource: fileMetadata,
-                    fields: "id"
-                });
-                console.log("response", JSON.stringify(response))
-            }
-            catch (err) {
-                console.log(err.message);
-                return;
-            }
-            console.log(`Document ${this.projectName} created`)
-        },
-        async createProjectData(id) {
+        async createProjectData(id, items) {
             this.currentAction = `saving project data`
             console.log(this.currentAction)
             try {
@@ -206,59 +216,18 @@ export default {
                     finishEditingDate: this.finishEditingDate,
                     finishPublishDate: this.finishPublishDate,
                     wordGoal: this.wordGoal,
+                    ...items
                 }
-
-                const jsonContent = JSON.stringify(content);
-                console.log('content', jsonContent)
-
-                var file = new Blob([jsonContent], {type: 'text/plain'})
-                var metadata = {
-                    'name': `noveldocs_${id}_data.json`,
-                    'mimeType': 'text/plain', 
-                    'parents': [id], 
-                }
-
-                var accessToken = gapi.auth.getToken().access_token
-                var form = new FormData()
-                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }))
-                form.append('file', file)
-
-                let response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
-                    method: 'POST',
-                    headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
-                    body: form,
-                })
-
-                console.log("response", JSON.stringify(response))
+                
+                const novelDocsProjectData = await UtilsGoogleApi.createJson('project', id, content)
+                console.log(`project data saved`)
+                return novelDocsProjectData
             }
             catch (err) {
                 console.log(err.message);
                 return;
             }
-            console.log(`project data saved`)
         },
-        async createSubfolder(id, type) {
-            this.currentAction = `creating ${type} folder`
-            console.log(this.currentAction)
-            let response;
-            try {
-                var fileMetadata = {
-                    'name': `noveldocs_${id}_${type}`,
-                    'mimeType': 'application/vnd.google-apps.folder',
-                    'parents': [id]
-                };
-                response = await gapi.client.drive.files.create({
-                    resource: fileMetadata,
-                    fields: "id"
-                });
-                console.log("response", JSON.stringify(response))
-            }
-            catch (err) {
-                console.log(err.message);
-                return;
-            }
-            console.log(`Folder ${type} created`)
-        }
     }
 }
 </script>

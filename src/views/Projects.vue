@@ -1,7 +1,7 @@
 <template>
     <v-layout class="overflow-visible" style="height: 56px;">
-        <v-bottom-navigation bg-color="indigo">
-            <create-project-form @modalClosed="handleModalClosed"></create-project-form>
+        <v-bottom-navigation bg-color="indigo" :disabled="loading">
+            <create-project-form :novelDocsJsonId="novelDocsFileJsonId" :novelDocsFolderId="novelDocsFolderId" @modalClosed="handleModalClosed"></create-project-form>
             <v-btn @click.stop="listFiles">
                 <v-icon>mdi-refresh</v-icon>
                 Refresh
@@ -9,12 +9,18 @@
         </v-bottom-navigation>
     </v-layout>
     <v-list>
+        <v-progress-linear
+            v-if="loading"
+            indeterminate
+            height="4"
+            color="secondary"
+            ></v-progress-linear>
         <v-list-tile v-for="project in projects" :key="project.id">
-            <v-card :title="project.title" :subtitle="project.id" max-width="1024px">
+            <v-card :title="project.name" :subtitle="project.projectJsonId" max-width="1024px">
                 <v-card-actions>
-                    <delete-project-form :projectId="project.id" @modalClosed="handleModalClosed"></delete-project-form>
+                    <delete-project-form :novelDocsJsonId="novelDocsFileJsonId" :projectFolderId="project.folderId" :projectJsonId="project.projectJsonId" @modalClosed="handleModalClosed"></delete-project-form>
                     <v-col class="text-right">
-                        <router-link :to="'/project/' + project.id">
+                        <router-link :to="'/project/' + project.projectJsonId">
                             <v-btn variant="tonal" color="blue">Open</v-btn>
                         </router-link>
                     </v-col>
@@ -30,6 +36,7 @@
 <script>
 import CreateProjectForm from '@/components/CreateProjectForm.vue';
 import DeleteProjectForm from '@/components/DeleteProjectForm.vue';
+import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 
 export default {
     components: { CreateProjectForm, DeleteProjectForm },
@@ -41,12 +48,17 @@ export default {
         SCOPES: import.meta.env.VITE_SCOPES,
         bGapiLoaded: false,
         bGisLoaded: false,
-        projects: []
+        projects: [],
+        loading: true,
+        novelDocsFolder: null,
+        novelDocsFileJson: null,
+        novelDocsFolderId: null,
+        novelDocsFileJsonId: null,
     }),
     mounted() {
         this.loadGoogleScripts();
     },
-    computed() {
+    computed: {
     },
     methods: {
         handleModalClosed() {
@@ -56,7 +68,6 @@ export default {
             if (this.bGisLoaded && this.bGapiLoaded) {
                 let accessToken = localStorage.getItem("accessToken");
                 if (accessToken) {
-                    console.log("session token", accessToken);
                     gapi.client.setToken(accessToken);
                 }
                 if (gapi.client.getToken() === null) {
@@ -76,7 +87,6 @@ export default {
                     apiKey: this.API_KEY,
                     discoveryDocs: [this.DISCOVERY_DOC],
                 });
-                console.log("gapiLoaded");
                 this.bGapiLoaded = true;
                 this.askPermission();
             });
@@ -98,7 +108,6 @@ export default {
                 scope: this.SCOPES,
                 callback: this.authCallback, // defined later
             });
-            console.log("gisLoaded");
             this.bGisLoaded = true;
             this.askPermission();
         },
@@ -123,29 +132,41 @@ export default {
             });
         },
         async listFiles() {
-            let response;
+            this.loading=true;
+            this.projects = []
             try {
-                response = await gapi.client.drive.files.list({
-                    "pageSize": 50,
-                    "fields": "files(id, name)",
-                });
+                const novelDocsFiles = await this.getNovelDocsFiles()
+                this.novelDocsFolder = novelDocsFiles.find(file => file.name === 'noveldocs')
+                this.novelDocsFileJson = novelDocsFiles.find(file => file.name === 'noveldocs.json')
+                const novelDocsJson = await UtilsGoogleApi.getJson(this.novelDocsFileJson.id)
+                this.projects = novelDocsJson.projects
+                this.novelDocsFolderId= this.novelDocsFolder.id
+                this.novelDocsFileJsonId= this.novelDocsFileJson.id
             }
             catch (err) {
-                console.log(err.message);
-                return;
+                console.error(err);
             }
-            const files = response.result.files;
-            if (!files || files.length == 0) {
-                console.log("No files found.");
-                return;
-            }
-            // Flatten to string to display
-            this.projects = files.filter(file => file.name.includes("noveldocs_project_")).map((file) => ({ ...file, title: file.name.replace("noveldocs_project_", "") }));
-            const outputFolder = files.filter(file => file.name === "noveldocs_").reduce((str, file) => `${str}${file.name} (${file.id})\n`, "Folder:\n");
-            console.log(outputFolder);
-            const output = this.projects.reduce((str, file) => `${str}${file.name} (${file.id})\n`, "Files:\n");
-            console.log(output);
+            this.loading=false;
         },
+        async getNovelDocsFiles(){
+            var driveFiles = await UtilsGoogleApi.getFiles();
+            var novelDocsFiles = []
+            let novelDocsFolder = driveFiles.find(file => file.name === 'noveldocs')
+            if(!novelDocsFolder){
+                novelDocsFolder = await UtilsGoogleApi.createFolder('noveldocs')
+            }
+            novelDocsFiles.push(novelDocsFolder)
+            let novelDocsFileJson = driveFiles.find(file => file.name === 'noveldocs.json')
+            if(!novelDocsFileJson){
+                const content = {
+                    novelDocsFolderId: novelDocsFolder.id,
+                    projects: []
+                }
+                novelDocsFileJson = await UtilsGoogleApi.createJson('noveldocs', novelDocsFolder.id, content)
+            }
+            novelDocsFiles.push(novelDocsFileJson)
+            return novelDocsFiles
+        }
     },
 }
 </script>
