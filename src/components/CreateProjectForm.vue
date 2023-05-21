@@ -139,9 +139,10 @@ export default {
             this.finishPublishDate = ''
             this.wordCount = 0
         },
-        async createFolder(folder, parentId){
+        async createFolder(folder, parentId, items){
             this.currentAction = `creating ${folder} folder`
             const createdFolder = await UtilsGoogleApi.createFolder( folder, parentId)
+            items[folder] = {id: createdFolder.id, list: []}
             return createdFolder
         },
         async createProject() {
@@ -161,17 +162,11 @@ export default {
                     document: { id: projectDocument.id, },
                 };
 
-                //const folders = ['chapters','scenes','locations','characters']
-
-                var createdFolder = await this.createFolder('chapters', this.projectId)
-                items['chapters'] = {id: createdFolder.id, list: []}
-                createdFolder = await this.createFolder('scenes', this.projectId)
-                items['scenes'] = {id: createdFolder.id, list: []}
-                createdFolder = await this.createFolder('locations', this.projectId)
-                items['locations'] = {id: createdFolder.id, list: []}
-                createdFolder = await this.createFolder('characters', this.projectId)
-                items['characters'] = {id: createdFolder.id, list: []}
-
+                await this.createFolder('chapters', this.projectId, items)
+                await this.createFolder('scenes', this.projectId, items)
+                await this.createFolder('locations', this.projectId, items)
+                await this.createFolder('characters', this.projectId, items)
+                
                 console.log('items', JSON.stringify(items))
 
                 this.currentAction = `saving project data`
