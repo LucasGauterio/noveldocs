@@ -5,10 +5,7 @@
         prepend-icon="mdi-magnify"></v-text-field>
     </v-toolbar>
     <v-toolbar color="white" dense floating>
-      <v-btn color="green">
-        <v-icon>mdi-plus</v-icon>
-        Create character
-      </v-btn>
+      <create-character-form :projectJsonFileId="projectJsonFileId" @modalClosed="handleModalClosed"></create-character-form>
       <v-spacer></v-spacer>
       <v-btn-toggle v-model="viewMode" mandatory>
         <v-btn value="list" icon>
@@ -85,34 +82,53 @@
         </v-col>
       </v-row>
 
-      <div v-if="filteredCharacters.length === 0">
+      <v-row v-if="filteredCharacters.length === 0">
         <p>No characters found.</p>
-      </div>
+      </v-row>
     </v-container>
   </div>
 </template>
 <style scoped></style>
 <script>
+import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
+import CreateCharacterForm from '@/components/CreateCharacterForm.vue';
 export default {
+  components: { CreateCharacterForm },
+  props: ['projectJsonFileId'],
   data() {
     return {
-      characters: Array.from({ length: 10 }, (_, index) => ({
+      /*characters: Array.from({ length: 10 }, (_, index) => ({
         id: index + 1,
         name: `Character ${index + 1}`,
         photo: `https://picsum.photos/512/512?random`
-      })),
+      })),*/
       search: '',
-      viewMode: 'list'
+      viewMode: 'list',
+      characters: { list: []}
     };
   },
+  methods: {
+    handleModalClosed() {
+      this.characters = { list: []}
+      this.refreshCharacters()
+    },
+    async refreshCharacters() {
+      let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+      this.characters = projectData.characters
+    }
+  },
+  mounted() {
+    this.refreshCharacters()
+  }
+  ,
   computed: {
     filteredCharacters() {
       if (this.search.length > 3) {
-        return this.characters.filter(character =>
+        return this.characters.list.filter(character =>
           character.name.toLowerCase().includes(this.search.toLowerCase())
         )
       }
-      return this.characters
+      return this.characters.list
     }
   }
 };

@@ -31,12 +31,12 @@
         <v-card class="mx-auto document-card" height="calc(100vh - 200px)" v-if="view === 'book'">
             <v-card-title>{{ this.projectMetadata.projectName }}</v-card-title>
             <v-card-text class="iframe-wrapper">
-                <iframe
+                <iframe v-if="documentPath !== ''"
                     :src="documentPath"
                     style="width: 100%; height: 100%" frameborder="0" allowfullscreen></iframe>
             </v-card-text>
         </v-card>
-        <character-list v-if="view === 'characters'"></character-list>
+        <character-list v-if="view === 'characters'" :projectJsonFileId="projectId"></character-list>
     </v-container>
 </template>
 <style>
@@ -51,6 +51,7 @@
 </style>
 <script>
 import CharacterList from '@/components/CharacterList.vue';
+import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {
     components: { CharacterList },
     data: () => ({
@@ -68,6 +69,7 @@ export default {
         bGisLoaded: false,
         projects: [],
         createProjectDialog: false,
+        documentPath: ''
     }),
     mounted() {
         console.log("loading")
@@ -77,12 +79,6 @@ export default {
         projectId() {
             return this.$route.params.projectId
         },
-        documentPath() {
-            if(this.documentFile)
-                return `https://docs.google.com/document/d/${this.documentFile.id}/edit?rm=embedded`
-
-            return null
-        }
     },
     methods: {
         navigateToProjects() {
@@ -90,48 +86,20 @@ export default {
         },
         async findDocument() {
             this.view = 'book';
-            let response;
-            try {
-                response = await gapi.client.drive.files.list({
-                    "pageSize": 50,
-                    "fields": "files(id, name)",
-                });
-            }
-            catch (err) {
-                console.log(err.message)
-                return
-            }
-            const files = response.result.files
-            if (!files || files.length == 0) {
-                console.log("No files found.")
-                return
-            }
+            this.projectMetadata = await UtilsGoogleApi.getJson(this.projectId)
+            //console.log('projectMetadata', JSON.stringify(this.projectMetadata))
+            //console.log('projectMetadata', JSON.stringify(this.projectMetadata.document.id))
             // Flatten to string to display
-            this.documentFile = files.find(file => file.name === `noveldocs_${this.projectId}_document`)
-            this.metadataFile = files.find(file => file.name === `noveldocs_${this.projectId}_data.json`)
-            console.log("document ", this.documentFile)
-            console.log("data ", this.metadataFile)
-
-            try {
-                response = await gapi.client.drive.files.get({
-                    fileId: this.metadataFile.id,
-                    alt: 'media'
-                })
-                // Parse the JSON content as an object
-                this.projectMetadata = JSON.parse(response.body)
-                // Use the JSON content in your application
-                console.log(this.projectMetadata)
-                this.bookLoaded = true
-            }catch(err){
-                console.log(err.message);
-                return;
-            }
+            this.documentFile = this.projectMetadata.document.id
+            this.documentPath = `https://docs.google.com/document/d/${this.projectMetadata.document.id}/edit?rm=embedded`
+            //console.log("document ", this.documentFile)
+            //console.log("data ", this.projectMetadata)
         },
         async askPermission() {
             if (this.bGisLoaded && this.bGapiLoaded) {
                 let accessToken = localStorage.getItem("accessToken")
                 if (accessToken) {
-                    console.log("session token", accessToken)
+                    //console.log("session token", accessToken)
                     gapi.client.setToken(accessToken)
                 }
                 if (gapi.client.getToken() === null) {
@@ -151,7 +119,7 @@ export default {
                     apiKey: this.API_KEY,
                     discoveryDocs: [this.DISCOVERY_DOC],
                 });
-                console.log("gapiLoaded")
+                //console.log("gapiLoaded")
                 this.bGapiLoaded = true
                 this.askPermission()
             });
@@ -160,8 +128,8 @@ export default {
             if (resp.error !== undefined) {
                 throw (resp);
             }
-            console.log("authCallback", JSON.stringify(resp));
-            console.log("getAuthInstance", JSON.stringify(gapi.auth2.getAuthInstance()));
+            //console.log("authCallback", JSON.stringify(resp));
+            //console.log("getAuthInstance", JSON.stringify(gapi.auth2.getAuthInstance()));
 
             localStorage.setItem("accessToken",resp.access_token);
 
@@ -173,7 +141,7 @@ export default {
                 scope: this.SCOPES,
                 callback: this.authCallback, // defined later
             });
-            console.log("gisLoaded")
+            //console.log("gisLoaded")
             this.bGisLoaded = true
             this.askPermission()
         },

@@ -54,8 +54,9 @@
 </template>
 
 <script>
+import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {
-    props: ['projectId'],
+    props: ['projectFolderId','projectJsonId','novelDocsJsonId'],
     data: () => ({
         step: 1,
         currentTitle: ['Are you sure?', 'Success'],
@@ -74,60 +75,17 @@ export default {
             this.$emit('modalClosed');
         },
         async deleteProject() {
-            const files = await this.listProjectFiles();
-            await files.forEach(async file => {
-                await this.deleteFile(file);
-            });
-            this.step = 2
-            //noveldocs_project_${name}
-            //noveldocs_${id}_data
-            //noveldocs_${id}_document
-            //noveldocs_${id}_chapters
-            //noveldocs_${id}_scenes
-            //noveldocs_${id}_locations
-            //noveldocs_${id}_characters
-        },
-        async deleteFile(file) {
-            let response;
             try{
-                response = await gapi.client.drive.files.delete({
-                    fileId: file.id
-                })
-                console.log(`DELETED ${file.name} - ${file.id}`)
-                console.log(JSON.stringify(response))
+                await UtilsGoogleApi.deleteFile(this.projectFolderId);
             }catch(err){
-                console.log(err.message)
+                console.error(err)
             }
-        },
-        async listProjectFiles() {
-            let response;
-            try {
-                response = await gapi.client.drive.files.list({
-                    "pageSize": 50,
-                    "fields": "files(id, name)",
-                });
-                console.log(JSON.stringify(response))
-            }
-            catch (err) {
-                console.log(err.message)
-                return
-            }
-            const files = response.result.files
-            console.log(JSON.stringify(files))
-            console.log(this.projectId)
-            let project = files.find(file => file.id === this.projectId)
-            console.log(JSON.stringify(project))
-            let projectFiles = files.filter(file => file.name.includes(`noveldocs_${this.projectId}_`))
-            console.log(JSON.stringify(projectFiles))
-            projectFiles.push(project)
+            const novelDocsData = await UtilsGoogleApi.getJson(this.novelDocsJsonId)
+            novelDocsData.projects = novelDocsData.projects.filter(project => project.projectJsonId !== this.projectJsonId)
+            console.log('novelDocsData',JSON.stringify(novelDocsData))
+            await UtilsGoogleApi.updateJson(this.novelDocsJsonId, novelDocsData)
 
-            if (!files || files.length == 0) {
-                console.log("No files found.")
-                return
-            }
-            const output = projectFiles.reduce((str, file) => `${str}${file.name} (${file.id})\n`, "Files:\n");
-            console.log(output);
-            return projectFiles;
+            this.step = 2
         },
     }
 }
