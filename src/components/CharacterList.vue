@@ -27,14 +27,6 @@
 
             <template v-slot:append>
               <v-card-actions>
-                  <v-btn icon color="green" class="flex-grow-1">
-                    <v-icon>mdi-eye-outline</v-icon>
-                    
-                    <v-tooltip
-                      activator="parent"
-                      location="start"
-                    >View</v-tooltip>
-                  </v-btn>
                   <v-btn icon color="blue" class="flex-grow-1">
                     <v-icon>mdi-pencil</v-icon>
                     
@@ -58,17 +50,13 @@
       </v-row>
 
       <v-row v-else-if="viewMode === 'thumbnail'">
-        <v-col v-for="character in filteredCharacters" :key="character.id" cols="12" xs="12" sm="6" md="4" lg="4">
+        <v-col v-for="character in filteredCharacters" :key="character.id" cols="12" xs="12" :sm="thumbnailColumnsSize" :md="thumbnailColumnsSize" :lg="thumbnailColumnsSize">
           <v-card outlined>
             <v-img :src="character.photo" 
               height="200"
               cover></v-img>
             <v-card-text>{{ character.name }}</v-card-text>
               <v-card-actions>
-                  <v-btn color="green" class="flex-grow-1">
-                    <v-icon>mdi-eye-outline</v-icon>
-                    View
-                  </v-btn>
                   <v-btn color="blue" class="flex-grow-1">
                     <v-icon>mdi-pencil</v-icon>
                     Edit
@@ -94,7 +82,7 @@ import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 import CreateCharacterForm from '@/components/CreateCharacterForm.vue';
 export default {
   components: { CreateCharacterForm },
-  props: ['projectJsonFileId'],
+  props: ['projectJsonFileId', 'thumbnailsPerRow'],
   data() {
     return {
       /*characters: Array.from({ length: 10 }, (_, index) => ({
@@ -129,6 +117,9 @@ export default {
         )
       }
       return this.characters.list
+    },
+    thumbnailColumnsSize() {
+      return this.thumbnailsPerRow ? 12/this.thumbnailsPerRow : 4
     }
   }
 };
