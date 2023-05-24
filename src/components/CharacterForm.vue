@@ -82,6 +82,9 @@ export default {
                 default: return 'Success'
             }
         },
+        isNew(){
+            return this.characterId ? false : true
+        },
     },
     methods: {
         close() {
@@ -95,6 +98,15 @@ export default {
             this.characterBirthdate = ''
             this.characterPhoto = ''
             this.currentAction = ''
+        },
+        async saveCharacter(){
+            if(this.isNew){
+                await this.createCharacter()
+            }else{
+                await this.updateCharacter()
+            }
+        },
+        async updateCharacter() {
         },
         async createCharacter() {
             this.step++
