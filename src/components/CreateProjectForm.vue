@@ -81,7 +81,7 @@
                     Done
                 </v-btn>
                 <v-btn v-if="step === 5" color="primary" variant="flat" block>
-                    <router-link :to="'/project/' + this.projectJsonId" @click.stop="close">
+                    <router-link :to="'/projects/' + this.projectJsonId" @click.stop="close">
                         <v-list-tile-action>
                             <v-icon class="white--text">mdi-book</v-icon>
                         </v-list-tile-action>

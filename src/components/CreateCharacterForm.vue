@@ -1,12 +1,12 @@
 <template>
     <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent @input="handleModalInput">
         <template v-slot:activator="{ props }">
-            <v-btn v-bind="props" @click.stop="resetSteps">
+            <v-btn v-bind="props" @click.stop="resetSteps" color="green" variant="tonal">
                 <v-icon>mdi-plus</v-icon>
                 Create a new character
             </v-btn>
         </template>
-        <v-card class="mx-auto" max-width="500">
+        <v-card class="mx-auto dialog" max-width="500">
             <v-card-title class="text-h6 font-weight-regular justify-space-between">
                 <span>{{ currentTitle }}</span>
             </v-card-title>
@@ -59,7 +59,11 @@
         </v-card>
     </v-dialog>
 </template>
-
+<style>
+.dialog {
+    width: 500px;
+}
+</style>
 <script>
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {

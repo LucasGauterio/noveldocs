@@ -8,6 +8,7 @@
             </v-btn>
         </v-bottom-navigation>
     </v-layout>
+    <v-container class="content" fluid>
     <v-list>
         <v-progress-linear
             v-if="loading"
@@ -20,7 +21,7 @@
                 <v-card-actions>
                     <delete-project-form :novelDocsJsonId="novelDocsFileJsonId" :projectFolderId="project.folderId" :projectJsonId="project.projectJsonId" @modalClosed="handleModalClosed"></delete-project-form>
                     <v-col class="text-right">
-                        <router-link :to="'/project/' + project.projectJsonId">
+                        <router-link :to="'/projects/' + project.projectJsonId">
                             <v-btn variant="tonal" color="blue">Open</v-btn>
                         </router-link>
                     </v-col>
@@ -28,9 +29,12 @@
             </v-card>
         </v-list-tile>
     </v-list>
+    </v-container>
 </template>
-<style>
-
+<style scoped>
+.content {
+    max-width: 1024px;
+}
 
 </style>
 <script>
@@ -45,7 +49,7 @@ export default {
         CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         API_KEY: import.meta.env.VITE_API_KEY,
         DISCOVERY_DOC: import.meta.env.VITE_DISCOVERY_DOC,
-        SCOPES: import.meta.env.VITE_SCOPES,
+        SCOPES: import.meta.env.VITE_SCOPES.split(','),
         bGapiLoaded: false,
         bGisLoaded: false,
         projects: [],

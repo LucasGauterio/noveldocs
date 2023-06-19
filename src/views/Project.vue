@@ -1,77 +1,50 @@
 <template>
     <v-layout class="overflow-visible" style="height: 56px;">
-        <v-bottom-navigation bg-color="indigo">
+        <v-bottom-navigation v-model="view" bg-color="indigo">
             <v-btn @click.stop="navigateToProjects">
                 <v-icon>mdi-book-alphabet</v-icon>
                 Projects
             </v-btn>
-            <v-btn @click.stop="view = 'book'">
+            <v-btn value="book">
                 <v-icon>mdi-book-open-variant</v-icon>
-                Book
+                Novel
             </v-btn>
-
-            <v-menu>
-                <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props">
-                        <v-icon>mdi-account-group</v-icon>
-                        Characters
-                    </v-btn>
-                </template>
-
-                <v-list>
-                    <v-list-item key="1" value="1">
-                        <v-list-item-title @click="view = 'book'; sidebar = 'characters'">Open as sidebar</v-list-item-title>
-                    </v-list-item>
-                    <v-list-item key="2" value="2">
-                        <v-list-item-title @click="view = 'characters'">Open page</v-list-item-title>
-                    </v-list-item>
-                </v-list>
-            </v-menu>
-            
-            <v-menu>
-                <template v-slot:activator="{ props }">
-                    <v-btn v-bind="props">
-                        <v-icon>mdi-city</v-icon>
-                        Locations
-                    </v-btn>
-                </template>
-
-                <v-list>
-                    <v-list-item key="1" value="1">
-                        <v-list-item-title @click="view = 'book'; sidebar = 'locations'">Open as sidebar</v-list-item-title>
-                    </v-list-item>
-                    <v-list-item key="2" value="2">
-                        <v-list-item-title @click="view = 'locations'">Open page</v-list-item-title>
-                    </v-list-item>
-                </v-list>
-            </v-menu>
-            <v-btn @click.stop="view = 'Chapters'">
+            <v-btn value="chapters">
                 <v-icon>mdi-format-list-numbered</v-icon>
                 Chapters
             </v-btn>
-            <v-btn @click.stop="view = 'Scenes'">
+            <v-btn value="scenes">
                 <v-icon>mdi-movie-open-edit</v-icon>
                 Scenes
+            </v-btn>
+            <v-btn value="characters">
+                <v-icon>mdi-account-group</v-icon>
+                Characters
+            </v-btn>
+            <v-btn value="locations">
+                <v-icon>mdi-city</v-icon>
+                Locations
             </v-btn>
         </v-bottom-navigation>
     </v-layout>
     <v-container fluid v-if="projectMetadata">
         <v-row>
-            <v-col v-if="view === 'book'">
-                <v-card class="mx-auto document-card" height="calc(100vh - 200px)" v-if="view === 'book'">
+            <v-col cols="12" xs="12" sm="12" md="12" lg="12" class="category-viewer">
+                <character-list v-if="view === 'characters'" :projectJsonFileId="projectId" @close-category="closeCategory"></character-list>
+                <character-list v-if="view === 'locations'"  :projectJsonFileId="projectId" @close-category="closeCategory"></character-list>
+                <character-list v-if="view === 'chapters'"  :projectJsonFileId="projectId" @close-category="closeCategory"></character-list>
+                <character-list v-if="view === 'scenes'"  :projectJsonFileId="projectId" @close-category="closeCategory"></character-list>
+            </v-col>
+        </v-row>
+        <v-row>
+            <v-col>
+                <v-card class="mx-auto document-card" height="calc(100vh - 200px)">
                     <v-card-title>{{ this.projectMetadata.projectName }}</v-card-title>
                     <v-card-text class="iframe-wrapper">
                         <iframe v-if="documentPath !== ''" :src="documentPath" style="width: 100%; height: 100%" frameborder="0"
                             allowfullscreen></iframe>
                     </v-card-text>
                 </v-card>
-            </v-col>
-            <v-col cols="12" xs="12" sm="12" md="4" lg="4" v-if="sidebar">
-                <character-list v-if="sidebar === 'characters'" thumbnailsPerRow="1" :projectJsonFileId="projectId"></character-list>
-                <character-list v-if="sidebar === 'locations'" thumbnailsPerRow="1" :projectJsonFileId="projectId"></character-list>
-            </v-col>
-            <v-col v-if="view === 'characters'">
-                <character-list :projectJsonFileId="projectId"></character-list>
             </v-col>
         </v-row>
     </v-container>
@@ -84,6 +57,10 @@
 .iframe-wrapper {
     width: 100%;
     height: 100%;
+}
+
+.category-viewer {
+    max-height: 600px;
 }
 </style>
 <script>
@@ -117,11 +94,13 @@ export default {
         projectId() {
             return this.$route.params.projectId
         },
-        
     },
     methods: {
         navigateToProjects() {
             this.$router.push('/projects');
+        },
+        closeCategory(){
+            this.view = 'book'
         },
         async findDocument() {
             this.view = 'book';

@@ -1,8 +1,12 @@
 <template>
-  <div>
+  <v-container>
     <v-toolbar color="white" dense floating>
       <v-text-field single-line hide-details v-model="search" placeholder="Search" variant="underlined"
         prepend-icon="mdi-magnify"></v-text-field>
+        <v-btn color="red" @click.stop="close" variant="tonal">
+            <v-icon>mdi-close</v-icon>
+            Close
+        </v-btn>
     </v-toolbar>
     <v-toolbar color="white" dense floating>
       <create-character-form :projectJsonFileId="projectJsonFileId" @modalClosed="handleModalClosed"></create-character-form>
@@ -17,7 +21,7 @@
       </v-btn-toggle>
     </v-toolbar>
 
-    <v-container>
+    <v-container class="overflow-auto">
       <v-row v-if="viewMode === 'list'">
         <v-col v-for="character in filteredCharacters" :key="character.id" cols="12" sm="12" md="12">
           <v-card class="mb-4">
@@ -53,7 +57,7 @@
         <v-col v-for="character in filteredCharacters" :key="character.id" cols="12" xs="12" :sm="thumbnailColumnsSize" :md="thumbnailColumnsSize" :lg="thumbnailColumnsSize">
           <v-card outlined>
             <v-img :src="character.photo" 
-              height="200"
+              height="100"
               cover></v-img>
             <v-card-text>{{ character.name }}</v-card-text>
               <v-card-actions>
@@ -74,9 +78,14 @@
         <p>No characters found.</p>
       </v-row>
     </v-container>
-  </div>
+  </v-container>
 </template>
-<style scoped></style>
+<style scoped>
+.overflow-auto{
+  max-height: 400px;
+  overflow-y: auto;
+}
+</style>
 <script>
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 import CreateCharacterForm from '@/components/CreateCharacterForm.vue';
@@ -96,6 +105,9 @@ export default {
     };
   },
   methods: {
+    close(){
+      this.$emit('close-category')
+    },
     handleModalClosed() {
       this.characters = { list: []}
       this.refreshCharacters()
