@@ -6,7 +6,7 @@
       <v-btn flat color="white" @click="snackbar = false">Close</v-btn>
     </v-snackbar>
 
-    <v-app-bar flat app>
+    <v-app-bar app>
       <!--
         <v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       -->
@@ -93,7 +93,7 @@ export default {
   },
   methods: {
     getEncodedCredential() {
-      return localStorage.getItem("credential")
+      return localStorage.getItem("credential") || ""
     },
     getDecodedCredential() {
       try {

@@ -1,31 +1,6 @@
 <template>
     <v-layout class="overflow-visible" style="height: 56px;">
-        <v-bottom-navigation v-model="view" bg-color="indigo">
-            <v-btn @click.stop="navigateToProjects">
-                <v-icon>mdi-book-alphabet</v-icon>
-                Projects
-            </v-btn>
-            <v-btn value="book">
-                <v-icon>mdi-book-open-variant</v-icon>
-                Novel
-            </v-btn>
-            <v-btn value="chapters">
-                <v-icon>mdi-format-list-numbered</v-icon>
-                Chapters
-            </v-btn>
-            <v-btn value="scenes">
-                <v-icon>mdi-movie-open-edit</v-icon>
-                Scenes
-            </v-btn>
-            <v-btn value="characters">
-                <v-icon>mdi-account-group</v-icon>
-                Characters
-            </v-btn>
-            <v-btn value="locations">
-                <v-icon>mdi-city</v-icon>
-                Locations
-            </v-btn>
-        </v-bottom-navigation>
+        <app-toolbar :currentView="view" :options="menuOptions" @toolbar-click="toolbarAction"></app-toolbar>
     </v-layout>
     <v-container fluid v-if="projectMetadata">
         <v-row>
@@ -64,14 +39,16 @@
 }
 </style>
 <script>
+import AppToolbar from '@/components/AppToolbar.vue';
 import CharacterList from '@/components/CharacterList.vue';
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {
-    components: { CharacterList },
+    components: { CharacterList, AppToolbar },
     data: () => ({
         view: 'book',
         bookLoaded: false,
         documentFile: null,
+        documentPath: '',
         metadataFile: null,
         projectMetadata: null,
         tokenClient: null,
@@ -83,8 +60,8 @@ export default {
         bGisLoaded: false,
         projects: [],
         createProjectDialog: false,
-        documentPath: '',
         sidebar: null,
+        menuOptions: ['projects','book','chapters','scenes','characters','locations'],
     }),
     mounted() {
         console.log("loading")
@@ -96,6 +73,10 @@ export default {
         },
     },
     methods: {
+        toolbarAction(action){
+            console.log('doSomething', action)
+            this.view = action;
+        },
         navigateToProjects() {
             this.$router.push('/projects');
         },

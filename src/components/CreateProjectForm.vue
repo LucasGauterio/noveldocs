@@ -1,11 +1,5 @@
 <template>
     <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent @input="handleModalInput">
-        <template v-slot:activator="{ props }">
-            <v-btn v-bind="props" @click.stop="resetSteps">
-                <v-icon>mdi-plus</v-icon>
-                Create a new project
-            </v-btn>
-        </template>
         <v-card class="mx-auto" max-width="500">
             <v-card-title class="text-h6 font-weight-regular justify-space-between">
                 <v-avatar color="primary" size="24" v-text="step"></v-avatar>
@@ -81,7 +75,7 @@
                     Done
                 </v-btn>
                 <v-btn v-if="step === 5" color="primary" variant="flat" block>
-                    <router-link :to="'/projects/' + this.projectJsonId" @click.stop="close">
+                    <router-link :to="{name: 'Project', params: {projectId: this.projectJsonId} }" @click.stop="close">
                         <v-list-tile-action>
                             <v-icon class="white--text">mdi-book</v-icon>
                         </v-list-tile-action>
@@ -98,8 +92,9 @@
 <script>
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {
-    props: ['novelDocsJsonId','novelDocsFolderId'],
+    props: ['novelDocsJsonId','novelDocsFolderId','open'],
     data: () => ({
+        dialog: false,
         step: 1,
         projectName: '',
         description: '',
@@ -111,9 +106,11 @@ export default {
         currentAction: '',
         dialog: false,
         projectId: '',
-        projectJsonId: ''
+        projectJsonId: '',
     }),
-
+    mounted() {
+        this.dialog = this.open;
+    },
     computed: {
         currentTitle() {
             switch (this.step) {

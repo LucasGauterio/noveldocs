@@ -1,55 +1,37 @@
 <template>
     <v-layout class="overflow-visible" style="height: 56px;">
-        <v-bottom-navigation bg-color="indigo" :disabled="loading">
-            <create-project-form :novelDocsJsonId="novelDocsFileJsonId" :novelDocsFolderId="novelDocsFolderId" @modalClosed="handleModalClosed"></create-project-form>
-            <v-btn @click.stop="listFiles">
-                <v-icon>mdi-refresh</v-icon>
-                Refresh
-            </v-btn>
-        </v-bottom-navigation>
+        <app-toolbar :currentView="view" :options="menuOptions" @toolbar-click="toolbarAction"></app-toolbar>
+        <create-project-form v-model="createProjectDialog" :novelDocsJsonId="novelDocsFileJsonId"
+            :novelDocsFolderId="novelDocsFolderId" @modalClosed="handleModalClosed"></create-project-form>
     </v-layout>
     <v-container class="content" fluid>
-    <v-list>
-        <v-progress-linear
-            v-if="loading"
-            indeterminate
-            height="4"
-            color="secondary"
-            ></v-progress-linear>
-        <v-list-tile v-for="project in projects" :key="project.id">
-            <v-card :title="project.name" :subtitle="project.projectJsonId" max-width="1024px">
-                <v-card-actions>
-                    <delete-project-form :novelDocsJsonId="novelDocsFileJsonId" :projectFolderId="project.folderId" :projectJsonId="project.projectJsonId" @modalClosed="handleModalClosed"></delete-project-form>
-                    <v-col class="text-right">
-                        <router-link :to="'/projects/' + project.projectJsonId">
-                            <v-btn variant="tonal" color="blue">Open</v-btn>
-                        </router-link>
-                    </v-col>
-                </v-card-actions>
-            </v-card>
-        </v-list-tile>
-    </v-list>
+        <project-list v-if="isVisible('projects')" :loading="loading" :projects="projects"></project-list>
+        <character-list v-if="category === 'characters'" :projectJsonFileId="projectId" @close="close"></character-list>
+        <project v-if="isVisible('book')" :projectId="projectId"></project>
     </v-container>
 </template>
 <style scoped>
 .content {
     max-width: 1024px;
 }
-
 </style>
 <script>
+import AppToolbar from '@/components/AppToolbar.vue';
 import CreateProjectForm from '@/components/CreateProjectForm.vue';
 import DeleteProjectForm from '@/components/DeleteProjectForm.vue';
+import CharacterList from '@/components/CharacterList.vue';
+import ProjectList from '@/components/ProjectList.vue';
+import Project from '@/components/Project.vue';
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 
 export default {
-    components: { CreateProjectForm, DeleteProjectForm },
+    components: { CreateProjectForm, DeleteProjectForm, AppToolbar, ProjectList, Project, CharacterList },
     data: () => ({
         tokenClient: null,
         CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         API_KEY: import.meta.env.VITE_API_KEY,
         DISCOVERY_DOC: import.meta.env.VITE_DISCOVERY_DOC,
-        SCOPES: import.meta.env.VITE_SCOPES.split(','),
+        SCOPES: import.meta.env.VITE_SCOPES,
         bGapiLoaded: false,
         bGisLoaded: false,
         projects: [],
@@ -58,15 +40,82 @@ export default {
         novelDocsFileJson: null,
         novelDocsFolderId: null,
         novelDocsFileJsonId: null,
+        createProjectDialog: false,
+        menuOptions: ['new-project', 'refresh'],
+        categories: ['charpters', 'scenes', 'characters', 'locations']
     }),
     mounted() {
         this.loadGoogleScripts();
     },
     computed: {
+        projectId() {
+            return this.$route.query.projectId
+        },
+        category() {
+            return this.$route.query.category
+        },
+        menuOptions() {
+            return {
+                'projects': ['new-project', 'refresh'],
+                'book': ['projects', 'book', 'chapters', 'scenes', 'characters', 'locations'],
+            }[this.view]
+        },
+        view() {
+            return this.$route.query.view || 'projects'
+        },
     },
     methods: {
+        content() {
+            const content = [
+                {
+                    view: 'projects',
+                    component: 'project-list',
+                    props: {
+                        loading: this.loading,
+                        projects: this.projects
+                    },
+                },
+            ].find(content => content.view === this.view())
+            console.log(content.component);
+            return content
+        },
+        isVisible(view) {
+            return this.view == view
+        }
+        ,
+        close(category) {
+            console.log('close', category)
+
+            const closeActions = {
+                "category": () => {
+                    var query = this.$route.query
+                    console.log(query)
+                    delete query.category
+                    console.log(query)
+                    this.$router.push({ query })
+                },
+            }
+            closeActions[category]()
+        },
+        toolbarAction(action) {
+            console.log('doSomething', action)
+
+            const toolbarActions = {
+                "new-project": this.createNewProject,
+                "refresh": this.listFiles,
+                "projects": () => this.$router.push({ query: { view: 'projects' } }),
+                "characters": () => this.$router.push({ query: { view: 'book', projectId: this.projectId, category: 'characters' } }),
+                "close-category": () => this.$router.push({ query: { view: 'book', projectId: this.projectId, } }),
+            }
+
+            toolbarActions[action]()
+        },
         handleModalClosed() {
-            this.listFiles();
+            this.createProjectDialog = false
+            this.listFiles()
+        },
+        createNewProject() {
+            this.createProjectDialog = true
         },
         askPermission() {
             if (this.bGisLoaded && this.bGapiLoaded) {
@@ -136,7 +185,7 @@ export default {
             });
         },
         async listFiles() {
-            this.loading=true;
+            this.loading = true;
             this.projects = []
             try {
                 const novelDocsFiles = await this.getNovelDocsFiles()
@@ -144,24 +193,24 @@ export default {
                 this.novelDocsFileJson = novelDocsFiles.find(file => file.name === 'noveldocs.json')
                 const novelDocsJson = await UtilsGoogleApi.getJson(this.novelDocsFileJson.id)
                 this.projects = novelDocsJson.projects
-                this.novelDocsFolderId= this.novelDocsFolder.id
-                this.novelDocsFileJsonId= this.novelDocsFileJson.id
+                this.novelDocsFolderId = this.novelDocsFolder.id
+                this.novelDocsFileJsonId = this.novelDocsFileJson.id
             }
             catch (err) {
                 console.error(err);
             }
-            this.loading=false;
+            this.loading = false;
         },
-        async getNovelDocsFiles(){
+        async getNovelDocsFiles() {
             var driveFiles = await UtilsGoogleApi.getFiles();
             var novelDocsFiles = []
             let novelDocsFolder = driveFiles.find(file => file.name === 'noveldocs')
-            if(!novelDocsFolder){
+            if (!novelDocsFolder) {
                 novelDocsFolder = await UtilsGoogleApi.createFolder('noveldocs')
             }
             novelDocsFiles.push(novelDocsFolder)
             let novelDocsFileJson = driveFiles.find(file => file.name === 'noveldocs.json')
-            if(!novelDocsFileJson){
+            if (!novelDocsFileJson) {
                 const content = {
                     novelDocsFolderId: novelDocsFolder.id,
                     projects: []

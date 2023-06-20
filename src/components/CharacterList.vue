@@ -106,7 +106,7 @@ export default {
   },
   methods: {
     close(){
-      this.$emit('close-category')
+      this.$emit('close','category')
     },
     handleModalClosed() {
       this.characters = { list: []}
