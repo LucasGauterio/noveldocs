@@ -1,42 +1,27 @@
 <template>
     <v-layout class="overflow-visible" style="height: 56px;">
-        <v-bottom-navigation bg-color="indigo">
-            <v-btn @click.stop="navigateToProjects">
-                <v-icon>mdi-book-alphabet</v-icon>
-                Projects
-            </v-btn>
-            <v-btn @click.stop="view = 'book'">
-                <v-icon>mdi-book-open-variant</v-icon>
-                Book
-            </v-btn>
-            <v-btn @click.stop="view = 'characters'">
-                <v-icon>mdi-account-group</v-icon>
-                Characters
-            </v-btn>
-            <v-btn @click.stop="view = 'locations'">
-                <v-icon>mdi-city</v-icon>
-                Locations
-            </v-btn>
-            <v-btn @click.stop="view = 'Chapters'">
-                <v-icon>mdi-format-list-numbered</v-icon>
-                Chapters
-            </v-btn>
-            <v-btn @click.stop="view = 'Scenes'">
-                <v-icon>mdi-movie-open-edit</v-icon>
-                Scenes
-            </v-btn>
-        </v-bottom-navigation>
+        <app-toolbar :currentView="view" :options="menuOptions" @toolbar-click="toolbarAction"></app-toolbar>
     </v-layout>
     <v-container fluid v-if="projectMetadata">
-        <v-card class="mx-auto document-card" height="calc(100vh - 200px)" v-if="view === 'book'">
-            <v-card-title>{{ this.projectMetadata.projectName }}</v-card-title>
-            <v-card-text class="iframe-wrapper">
-                <iframe v-if="documentPath !== ''"
-                    :src="documentPath"
-                    style="width: 100%; height: 100%" frameborder="0" allowfullscreen></iframe>
-            </v-card-text>
-        </v-card>
-        <character-list v-if="view === 'characters'" :projectJsonFileId="projectId"></character-list>
+        <v-row>
+            <v-col cols="12" xs="12" sm="12" md="12" lg="12" class="category-viewer">
+                <character-list v-if="view === 'characters'" :projectJsonFileId="projectId" @close-category="closeCategory"></character-list>
+                <character-list v-if="view === 'locations'"  :projectJsonFileId="projectId" @close-category="closeCategory"></character-list>
+                <character-list v-if="view === 'chapters'"  :projectJsonFileId="projectId" @close-category="closeCategory"></character-list>
+                <character-list v-if="view === 'scenes'"  :projectJsonFileId="projectId" @close-category="closeCategory"></character-list>
+            </v-col>
+        </v-row>
+        <v-row>
+            <v-col>
+                <v-card class="mx-auto document-card" height="calc(100vh - 200px)">
+                    <v-card-title>{{ this.projectMetadata.projectName }}</v-card-title>
+                    <v-card-text class="iframe-wrapper">
+                        <iframe v-if="documentPath !== ''" :src="documentPath" style="width: 100%; height: 100%" frameborder="0"
+                            allowfullscreen></iframe>
+                    </v-card-text>
+                </v-card>
+            </v-col>
+        </v-row>
     </v-container>
 </template>
 <style>
@@ -48,16 +33,22 @@
     width: 100%;
     height: 100%;
 }
+
+.category-viewer {
+    max-height: 600px;
+}
 </style>
 <script>
+import AppToolbar from '@/components/AppToolbar.vue';
 import CharacterList from '@/components/CharacterList.vue';
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {
-    components: { CharacterList },
+    components: { CharacterList, AppToolbar },
     data: () => ({
         view: 'book',
         bookLoaded: false,
         documentFile: null,
+        documentPath: '',
         metadataFile: null,
         projectMetadata: null,
         tokenClient: null,
@@ -69,7 +60,8 @@ export default {
         bGisLoaded: false,
         projects: [],
         createProjectDialog: false,
-        documentPath: ''
+        sidebar: null,
+        menuOptions: ['projects','book','chapters','scenes','characters','locations'],
     }),
     mounted() {
         console.log("loading")
@@ -81,8 +73,15 @@ export default {
         },
     },
     methods: {
+        toolbarAction(action){
+            console.log('doSomething', action)
+            this.view = action;
+        },
         navigateToProjects() {
             this.$router.push('/projects');
+        },
+        closeCategory(){
+            this.view = 'book'
         },
         async findDocument() {
             this.view = 'book';
@@ -131,7 +130,7 @@ export default {
             //console.log("authCallback", JSON.stringify(resp));
             //console.log("getAuthInstance", JSON.stringify(gapi.auth2.getAuthInstance()));
 
-            localStorage.setItem("accessToken",resp.access_token);
+            localStorage.setItem("accessToken", resp.access_token);
 
             this.findDocument();
         },

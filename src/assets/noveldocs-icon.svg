@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg data-v-6805eed4="" version="1.0" width="100%" height="100%" viewBox="1.17 6.428 72 72" preserveAspectRatio="xMidYMid meet" color-interpolation-filters="sRGB" style="margin: auto;" xmlns="http://www.w3.org/2000/svg">
+  <rect data-v-6805eed4="" x="0" y="0" width="100%" height="100%" fill="url(#watermark)" fill-opacity="1" class="watermarklayer"/>
+  <g class="iconsvg-imagesvg" transform="matrix(1, 0, 0, 1, 7.153225, 7.56813)" fill="#333">
+    <g>
+      <rect fill="#333" fill-opacity="0" stroke-width="2" x="0" y="0" width="60" height="69.28166460746164" class="image-rect"/>
+      <svg x="0" y="0" width="60" height="69.28166460746164" filtersec="colorsb9488143958" class="image-svg-svg primary" style="overflow: visible;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68.19999694824219 78.75">
+          <title>资源 12</title>
+          <path fill="#00b0e5" d="M68.2 41.16v17.9L34.1 78.75V57.28l15.51-8.95V27.71L68.2 41.16zM34.1 0v21.47l-15.51 8.95v20.62L0 37.59v-17.9L34.1 0z"/>
+          <path fill="#0083ac" d="M0 37.59l18.59 3.66v9.79L0 37.59z"/>
+          <path fill="#69cfef" d="M34.1 57.28L15.51 68.02 0 59.06V37.59l18.59 10.74 15.51 8.95z"/>
+          <path fill="#0083ac" d="M68.2 41.16L49.61 37.5v-9.79L68.2 41.16z"/>
+          <path fill="#69cfef" d="M68.2 19.69v21.47L49.61 30.42 34.1 21.47l18.6-10.74 15.5 8.96z"/>
+        </svg>
+      </svg>
+    </g>
+  </g>
+</svg>

@@ -1,30 +1,39 @@
 <template>
+  <nav>
 
-    <nav>
+    <v-snackbar v-model="snackbar" :timeout="4000" top color="success">
+      <span>New project added!</span>
+      <v-btn flat color="white" @click="snackbar = false">Close</v-btn>
+    </v-snackbar>
 
-      <v-snackbar v-model="snackbar" :timeout="4000" top color="success">
-        <span>New project added!</span>
-        <v-btn flat color="white" @click="snackbar = false">Close</v-btn>
-      </v-snackbar>
-
-      <v-toolbar flat app>
+    <v-app-bar app>
+      <!--
         <v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+      -->
+      <v-app-bar-title>
+        <v-img :src="logo" title="NOVELDOCS" height="60px"></v-img>
+      </v-app-bar-title>
 
-        <router-link to="/">
-          <v-toolbar-title class="text-uppercase">
-            <span class="font-weight-light">Novel</span>
-            <span>Docs</span>
-          </v-toolbar-title>
-        </router-link>
-        <v-spacer></v-spacer>
-        
-        <GoogleSignInButton v-if="!isAuthenticated"
-          @success="handleLoginSuccess"
-          @error="handleLoginError"
-        ></GoogleSignInButton>
-
-      </v-toolbar>
-
+      <v-list>
+        <v-list-item v-if="isAuthenticated" @click.stop="logout"
+            :title="userData.name"
+            :subtitle="userData.email"
+          >
+        <template v-slot:prepend>
+          <v-icon icon="mdi-power"></v-icon>
+        </template>
+        <v-tooltip
+                      activator="parent"
+                      location="start"
+                    >Logout</v-tooltip>
+        </v-list-item>
+      <v-list-item v-if="!isAuthenticated">
+        <GoogleSignInButton v-if="!isAuthenticated" @success="handleLoginSuccess" @error="handleLoginError">
+        </GoogleSignInButton>
+      </v-list-item>
+      </v-list>
+    </v-app-bar>
+    <!--
       <v-navigation-drawer v-model="drawer" temporary class="primary" v-if="isAuthenticated">
         <v-list>
           <v-list-item
@@ -48,36 +57,35 @@
         </v-list>
 
       </v-navigation-drawer>
-
-    </nav>
-
+      -->
+  </nav>
 </template>
-<style>
- </style>
+<style></style>
 <script>
 import { GoogleSignInButton, useOneTap, decodeCredential } from "vue3-google-signin"
-
+import logo from '../assets/noveldocs-logo.svg'
 export default {
   data: () => ({
-      drawer: false,
-      links: [
-        { icon: 'mdi-book', text: 'Projects', route: '/projects'},
-      ],  
-      snackbar: false,
+    drawer: false,
+    logo: logo,
+    links: [
+      { icon: 'mdi-book', text: 'Projects', route: '/projects' },
+    ],
+    snackbar: false,
+    credential: null,
   }),
-
   computed: {
     isAuthenticated() {
-      let credential = this.getDecodedCredential()
-      let hasCredential = credential !== null && credential !== undefined && credential.email !== undefined
-      console.log("isAuthenticated",hasCredential)
+      this.credential = this.getDecodedCredential()
+      let hasCredential = this.credential !== null && this.credential !== undefined && this.credential.email !== undefined
+      console.log("isAuthenticated", hasCredential)
       return hasCredential
     },
     userData() {
-      return this.getDecodedCredential()
+      return this.credential
     }
   },
-  mounted(){
+  mounted() {
     useOneTap({
       onSuccess: this.handleLoginSuccess,
       onError: this.handleLoginError,
@@ -85,31 +93,33 @@ export default {
   },
   methods: {
     getEncodedCredential() {
-      return localStorage.getItem("credential")
+      return localStorage.getItem("credential") || ""
     },
     getDecodedCredential() {
       try {
-        return decodeCredential(this.getEncodedCredential())  
+        return decodeCredential(this.getEncodedCredential())
       } catch (error) {
         console.error(error)
         return null
       }
     },
     setCredential(credential) {
+      this.credential = credential
       return localStorage.setItem("credential", credential)
     },
-    logout(response){
+    logout() {
       console.log("logout")
-      gapi.auth2.getAuthInstance().revokeAccess();
-      this.isAuthenticated = false
+      gapi.auth.setToken(null)
+      this.setCredential(null)
+      gapi.auth.signOut()
       console.log("logged out")
     },
-    handleLoginSuccess(response){
+    handleLoginSuccess(response) {
       const { credential } = response;
       console.log("credential", credential);
       this.setCredential(credential)
     },
-    handleLoginError (){
+    handleLoginError() {
       console.error("Login failed");
     }
   }

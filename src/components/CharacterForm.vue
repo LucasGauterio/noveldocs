@@ -1,12 +1,12 @@
 <template>
     <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent @input="handleModalInput">
         <template v-slot:activator="{ props }">
-            <v-btn v-bind="props" @click.stop="resetSteps" color="green" variant="tonal">
-                <v-icon>mdi-plus</v-icon>
-                Create a new character
+            <v-btn v-bind="props" @click.stop="resetSteps">
+                <v-icon>{{ buttonIcon }}</v-icon>
+                {{ buttonText }}
             </v-btn>
         </template>
-        <v-card class="mx-auto dialog" max-width="500">
+        <v-card class="mx-auto" max-width="500">
             <v-card-title class="text-h6 font-weight-regular justify-space-between">
                 <span>{{ currentTitle }}</span>
             </v-card-title>
@@ -17,7 +17,9 @@
                         <v-text-field label="Name" placeholder="Anne Watson" v-model="characterName"></v-text-field>
                         <v-text-field label="Nickname" placeholder="Anne" v-model="characterNickname"></v-text-field>
                         <v-text-field label="Birthdate" type="date" v-model="characterBirthdate" ></v-text-field>
-                        <v-text-field label="Photo" v-model="characterPhoto" type="url"></v-text-field>                        
+                        <v-text-field label="Photo" v-model="characterPhoto" type="url"></v-text-field>
+                        <iframe v-if="documentPath !== ''" :src="documentPath" style="width: 100%; height: 100%" frameborder="0"
+                            allowfullscreen></iframe>
                     </v-card-text>
                 </v-window-item>
                 <v-window-item :value="2">
@@ -25,7 +27,7 @@
                         <v-progress-circular color="blue-lighten-3" indeterminate :size="54"
                             :width="12"></v-progress-circular>
                         <h3 class="text-h6 font-weight-light mb-2">
-                            Creating new character
+                            Saving character
                         </h3>
                         <span class="text-caption text-grey">{{ currentAction }}</span>
                     </div>
@@ -35,7 +37,7 @@
                     <div class="pa-4 text-center">
                         <v-icon color="blue-lighten-2" icon="mdi-thumb-up" size="x-large" variant="text"></v-icon>
                         <h3 class="text-h6 font-weight-light mb-2">
-                            New character created
+                            Character saved
                         </h3>
                     </div>
                 </v-window-item>
@@ -49,25 +51,17 @@
                 </v-btn>
                 <v-spacer v-if="step !== 2"></v-spacer>
                 <v-btn v-if="step === 1" variant="flat" @click="createCharacter">
-                    Done
-                </v-btn>
-                <v-btn v-if="step === 3" color="primary" variant="flat" block @click="close">
-                    <v-icon class="white--text">mdi-book</v-icon>
-                    Open character
+                    Save
                 </v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
-<style>
-.dialog {
-    width: 500px;
-}
-</style>
+
 <script>
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {
-    props: ['projectJsonFileId'],
+    props: ['projectJsonFileId', 'buttonIcon', 'buttonText', 'characterId'],
     data: () => ({
         step: 1,
         characterName: '',
@@ -76,7 +70,8 @@ export default {
         characterPhoto: '',
         currentAction: '',
         dialog: false,
-        projectId: ''
+        projectId: '',
+        documentPath: 'https://docs.google.com/document/d/1Y-K7jLgMJI5jDaSmY5X_rp-zJ3dDt0ugfhrpleVQIRQ/edit?rm=embedded'
     }),
 
     computed: {
@@ -86,6 +81,9 @@ export default {
                 case 2: return 'Processing'
                 default: return 'Success'
             }
+        },
+        isNew(){
+            return this.characterId ? false : true
         },
     },
     methods: {
@@ -100,6 +98,15 @@ export default {
             this.characterBirthdate = ''
             this.characterPhoto = ''
             this.currentAction = ''
+        },
+        async saveCharacter(){
+            if(this.isNew){
+                await this.createCharacter()
+            }else{
+                await this.updateCharacter()
+            }
+        },
+        async updateCharacter() {
         },
         async createCharacter() {
             this.step++
