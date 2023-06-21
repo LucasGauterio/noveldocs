@@ -9,7 +9,7 @@
         </v-btn>
     </v-toolbar>
     <v-toolbar color="white" dense floating>
-      <character-form buttonIcon="mid-plus" buttonText="Create new character" buttonColor="green" :projectJsonFileId="projectJsonFileId" @modalClosed="handleModalClosed"></character-form>
+      <scene-form buttonIcon="mid-plus" buttonText="Create new scene" buttonColor="green" :projectJsonFileId="projectJsonFileId" @modalClosed="handleModalClosed"></scene-form>
       <v-spacer></v-spacer>
       <v-btn-toggle v-model="viewMode" mandatory>
         <v-btn value="list" icon>
@@ -29,10 +29,10 @@
     </v-container>
     <v-container class="overflow-auto">
       <v-row v-if="viewMode === 'list'">
-        <v-col v-for="character in filteredCharacters" :key="character.id" cols="12" sm="12" md="12">
+        <v-col v-for="scene in filteredScenes" :key="scene.id" cols="12" sm="12" md="12">
           <v-card>
             <template v-slot:prepend>
-              <v-card-title>{{ character.name }}</v-card-title>
+              <v-card-title>{{ scene.name }}</v-card-title>
             </template>
 
             <template v-slot:append>
@@ -42,7 +42,7 @@
                     
                     <v-tooltip
                       activator="parent"
-                      location="start"
+                      scene="start"
                     >Edit</v-tooltip>
                   </v-btn>
                 <v-btn icon color="red" class="flex-grow-1">
@@ -50,7 +50,7 @@
                     
                     <v-tooltip
                       activator="parent"
-                      location="start"
+                      scene="start"
                     >Delete</v-tooltip>
                 </v-btn>
               </v-card-actions>
@@ -60,12 +60,12 @@
       </v-row>
 
       <v-row v-else-if="viewMode === 'thumbnail'">
-        <v-col v-for="character in filteredCharacters" :key="character.id" cols="12" xs="12" :sm="thumbnailColumnsSize" :md="thumbnailColumnsSize" :lg="thumbnailColumnsSize">
+        <v-col v-for="scene in filteredScenes" :key="scene.id" cols="12" xs="12" sm="6" :md="thumbnailColumnsSize" :lg="thumbnailColumnsSize">
           <v-card outlined>
-            <v-img :src="character.thumbnail" 
+            <v-img :src="scene.thumbnail" 
               height="100"
               cover></v-img>
-            <v-card-text>{{ character.name }}</v-card-text>
+            <v-card-text>{{ scene.name }}</v-card-text>
               <v-card-actions>
                   <v-btn color="blue" class="flex-grow-1">
                     <v-icon>mdi-pencil</v-icon>
@@ -80,9 +80,9 @@
         </v-col>
       </v-row>
 
-      <v-row v-if="filteredCharacters.length === 0 && !loading">
+      <v-row v-if="filteredScenes.length === 0 && !loading">
         <v-col class="text-center">
-          <p>No characters found.</p>
+          <p>No scenes found.</p>
         </v-col>
       </v-row>
     </v-container>
@@ -96,50 +96,45 @@
 </style>
 <script>
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
-import CharacterForm from '@/components/CharacterForm.vue';
+import SceneForm from '@/components/SceneForm.vue';
 export default {
-  components: { CharacterForm },
+  components: { SceneForm },
   props: ['projectJsonFileId', 'thumbnailsPerRow'],
   data() {
     return {
-      /*characters: Array.from({ length: 10 }, (_, index) => ({
-        id: index + 1,
-        name: `Character ${index + 1}`,
-        photo: `https://picsum.photos/512/512?random`
-      })),*/
       search: '',
       viewMode: 'list',
-      characters: { list: []},
+      scenes: { list: []},
       loading: false,
     };
   },
   methods: {
     close(){
-      this.$emit('close','characters')
+      this.$emit('close','scenes')
     },
     handleModalClosed() {
-      this.characters = { list: []}
-      this.refreshCharacters()
+      this.scenes = { list: []}
+      this.refreshScenes()
     },
-    async refreshCharacters() {
+    async refreshScenes() {
       this.loading = true;
       let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
-      this.characters = projectData.characters
+      this.scenes = projectData.scenes
       this.loading = false;
     }
   },
   mounted() {
-    this.refreshCharacters()
+    this.refreshScenes()
   }
   ,
   computed: {
-    filteredCharacters() {
+    filteredScenes() {
       if (this.search.length > 3) {
-        return this.characters.list.filter(character =>
-          character.name.toLowerCase().includes(this.search.toLowerCase())
+        return this.scenes.list.filter(scene =>
+          scene.name.toLowerCase().includes(this.search.toLowerCase())
         )
       }
-      return this.characters.list
+      return this.scenes.list
     },
     thumbnailColumnsSize() {
       return this.thumbnailsPerRow ? 12/this.thumbnailsPerRow : 4

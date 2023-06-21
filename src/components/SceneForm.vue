@@ -13,10 +13,8 @@
             <v-window v-model="step">
                 <v-window-item :value="1">
                     <v-card-text>
-                        <v-text-field label="Name" placeholder="Anne Watson" v-model="characterName"></v-text-field>
-                        <v-text-field label="Nickname" placeholder="Anne" v-model="characterNickname"></v-text-field>
-                        <v-text-field label="Birthdate" type="date" v-model="characterBirthdate" ></v-text-field>
-                        <v-text-field label="Photo" v-model="characterPhoto" type="url"></v-text-field>
+                        <v-text-field label="Name" placeholder="" v-model="sceneName"></v-text-field>
+                        <picture-selector label="Select or drop images of the scene here" @filesSelected="handlePictures" ></picture-selector>
                         <iframe v-if="documentPath" :src="documentPath" style="width: 100%; height: 100%" frameborder="0"
                             allowfullscreen></iframe>
                     </v-card-text>
@@ -26,7 +24,7 @@
                         <v-progress-circular color="blue-lighten-3" indeterminate :size="54"
                             :width="12"></v-progress-circular>
                         <h3 class="text-h6 font-weight-light mb-2">
-                            Saving character
+                            Saving scene
                         </h3>
                         <span class="text-caption text-grey">{{ currentAction }}</span>
                     </div>
@@ -36,7 +34,7 @@
                     <div class="pa-4 text-center">
                         <v-icon color="blue-lighten-2" icon="mdi-thumb-up" size="x-large" variant="text"></v-icon>
                         <h3 class="text-h6 font-weight-light mb-2">
-                            Character saved
+                            Scene saved
                         </h3>
                     </div>
                 </v-window-item>
@@ -49,7 +47,7 @@
                     Cancel
                 </v-btn>
                 <v-spacer v-if="step !== 2"></v-spacer>
-                <v-btn v-if="step === 1" variant="flat" @click="createCharacter">
+                <v-btn v-if="step === 1" variant="flat" @click="createScene">
                     Save
                 </v-btn>
                 <v-btn v-if="step === 3" @click="close" block>
@@ -62,85 +60,90 @@
 
 <script>
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
+import PictureSelector from '@/components/PictureSelector.vue';
+
 export default {
-    props: ['projectJsonFileId', 'buttonIcon', 'buttonText', 'buttonColor', 'characterId'],
+    components: { PictureSelector },
+    props: ['projectJsonFileId', 'buttonIcon', 'buttonText', 'buttonColor', 'sceneId'],
     data: () => ({
         step: 1,
-        characterName: '',
-        characterNickname: '',
-        characterBirthdate: '',
-        characterPhoto: '',
+        sceneName: '',
+        scenePictures: [],
+        sceneCharacters: [],
+        sceneLocation: '',
         currentAction: '',
         dialog: false,
         projectId: '',
     }),
     computed: {
         documentPath(){
-            if(this.characterId)
+            if(this.sceneId)
                 return 'https://docs.google.com/document/d/1Y-K7jLgMJI5jDaSmY5X_rp-zJ3dDt0ugfhrpleVQIRQ/edit?rm=embedded'
         },
         currentTitle() {
             switch (this.step) {
-                case 1: return 'Character'
+                case 1: return 'Scene'
                 case 2: return 'Processing'
                 default: return 'Success'
             }
         },
         isNew(){
-            return this.characterId ? false : true
+            return this.sceneId ? false : true
         },
     },
     methods: {
+        handlePictures(e){
+            this.scenePictures = e.pictures
+            console.log(e.pictures[0].thumbnail)
+        },
         close() {
             this.dialog = false;
             this.$emit('modalClosed');
         },
         resetSteps() {
             this.step = 1
-            this.characterName = ''
-            this.characterNickname = ''
-            this.characterBirthdate = ''
-            this.characterPhoto = ''
+            this.sceneName = ''
+            this.scenePictures = []
+            this.sceneCharacters = []
+            this.sceneLocation = ''
             this.currentAction = ''
         },
-        async saveCharacter(){
+        async saveScene(){
             if(this.isNew){
-                await this.createCharacter()
+                await this.createScene()
             }else{
-                await this.updateCharacter()
+                await this.updateScene()
             }
         },
-        async updateCharacter() {
+        async updateScene() {
         },
-        async createCharacter() {
+        async createScene() {
             this.step++
-            this.currentAction = "creating character"
+            this.currentAction = "creating scene"
             console.log(this.currentAction)
             console.log(this.projectJsonFileId)
             try {
                 let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
 
-                this.currentAction = "creating character document"
-                const characterDocument = await UtilsGoogleApi.createDocument(this.characterName, projectData.characters.id)
+                this.currentAction = "creating scene document"
+                const sceneDocument = await UtilsGoogleApi.createDocument(this.sceneName, projectData.scenes.id)
                 
-                this.currentAction = "saving character data"
+                this.currentAction = "saving scene data"
                 let content = {
-                    name: this.characterName,
-                    nickname: this.characterNickname,
-                    birthdate: this.characterBirthdate,
-                    photo: this.characterPhoto,
-                    document: characterDocument.id
+                    name: this.sceneName,
+                    pictures: this.scenePictures,
+                    document: sceneDocument.id
                 }
 
-                const characterData = await UtilsGoogleApi.createJson(this.characterName, projectData.characters.id, content)
+                const sceneData = await UtilsGoogleApi.createJson(this.sceneName, projectData.scenes.id, content)
                 
-                this.currentAction = `updating project character list`
+                this.currentAction = `updating project scene list`
                 projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
-                projectData.characters.list.push(
+                projectData.scenes.list.push(
                     {
-                        name: this.characterName,
-                        thumbnail: this.characterPhoto,
-                        file: characterData.id,
+                        name: this.sceneName,
+                        thumbnail: this.scenePictures.length > 0 ? this.scenePictures[0].thumbnail : '',
+                        file: sceneData.id,
                     }
                 )
 
@@ -148,13 +151,13 @@ export default {
 
                 await UtilsGoogleApi.updateJson(this.projectJsonFileId, projectData)
 
-                this.currentAction = "character created"
+                this.currentAction = "scene created"
                 console.log(this.currentAction)
                 this.step++
             }
             catch (err) {
                 console.error(err);
-                this.currentAction = "error creating character"
+                this.currentAction = "error creating scene"
                 console.log(this.currentAction)
                 this.dialog = false
                 return;

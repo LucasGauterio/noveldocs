@@ -2,7 +2,7 @@
     <v-list>
         <v-progress-linear v-if="loading" indeterminate height="4" color="secondary"></v-progress-linear>
         <v-list-tile v-for="project in projects" :key="project.id">
-            <v-card :title="project.name" :subtitle="project.projectJsonId" max-width="1024px">
+            <v-card class="mb-2" :title="project.name" :subtitle="project.projectJsonId" max-width="1024px">
                 <v-card-actions>
                     <delete-project-form :novelDocsJsonId="novelDocsFileJsonId" :projectFolderId="project.folderId"
                         :projectJsonId="project.projectJsonId" @modalClosed="handleModalClosed"></delete-project-form>
