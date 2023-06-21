@@ -1,12 +1,11 @@
 <template>
     <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent @input="handleModalInput">
         <template v-slot:activator="{ props }">
-            <v-btn v-bind="props" @click.stop="resetSteps" color="green" variant="tonal">
-                <v-icon>mdi-plus</v-icon>
-                Create a new character
+            <v-btn v-bind="props" @click.stop="resetSteps" :color="buttonColor">
+                {{ buttonText }}
             </v-btn>
         </template>
-        <v-card class="mx-auto dialog" max-width="500">
+        <v-card class="mx-auto" width="500">
             <v-card-title class="text-h6 font-weight-regular justify-space-between">
                 <span>{{ currentTitle }}</span>
             </v-card-title>
@@ -14,10 +13,11 @@
             <v-window v-model="step">
                 <v-window-item :value="1">
                     <v-card-text>
-                        <v-text-field label="Name" placeholder="Anne Watson" v-model="characterName"></v-text-field>
-                        <v-text-field label="Nickname" placeholder="Anne" v-model="characterNickname"></v-text-field>
-                        <v-text-field label="Birthdate" type="date" v-model="characterBirthdate" ></v-text-field>
-                        <v-text-field label="Photo" v-model="characterPhoto" type="url"></v-text-field>                        
+                        <v-text-field label="Name" placeholder="" v-model="locationName"></v-text-field>
+                        <v-text-field label="Real world location (if exists)" placeholder="https://goo.gl/maps/qzZHdUFYDSLZQf8NA" v-model="locationRealWord"></v-text-field>
+                        <picture-selector  label="Select or drop images of the location here" @filesSelected="handlePictures" ></picture-selector>
+                        <iframe v-if="documentPath" :src="documentPath" style="width: 100%; height: 100%" frameborder="0"
+                            allowfullscreen></iframe>
                     </v-card-text>
                 </v-window-item>
                 <v-window-item :value="2">
@@ -25,7 +25,7 @@
                         <v-progress-circular color="blue-lighten-3" indeterminate :size="54"
                             :width="12"></v-progress-circular>
                         <h3 class="text-h6 font-weight-light mb-2">
-                            Creating new character
+                            Saving location
                         </h3>
                         <span class="text-caption text-grey">{{ currentAction }}</span>
                     </div>
@@ -35,7 +35,7 @@
                     <div class="pa-4 text-center">
                         <v-icon color="blue-lighten-2" icon="mdi-thumb-up" size="x-large" variant="text"></v-icon>
                         <h3 class="text-h6 font-weight-light mb-2">
-                            New character created
+                            Location saved
                         </h3>
                     </div>
                 </v-window-item>
@@ -48,88 +48,101 @@
                     Cancel
                 </v-btn>
                 <v-spacer v-if="step !== 2"></v-spacer>
-                <v-btn v-if="step === 1" variant="flat" @click="createCharacter">
-                    Done
+                <v-btn v-if="step === 1" variant="flat" @click="createLocation">
+                    Save
                 </v-btn>
-                <v-btn v-if="step === 3" color="primary" variant="flat" block @click="close">
-                    <v-icon class="white--text">mdi-book</v-icon>
-                    Open character
+                <v-btn v-if="step === 3" @click="close" block>
+                    Close
                 </v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
-<style>
-.dialog {
-    width: 500px;
-}
-</style>
+
 <script>
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
+import PictureSelector from '@/components/PictureSelector.vue';
 export default {
-    props: ['projectJsonFileId'],
+    components: { PictureSelector },
+    props: ['projectJsonFileId', 'buttonIcon', 'buttonText', 'buttonColor', 'locationId'],
     data: () => ({
         step: 1,
-        characterName: '',
-        characterNickname: '',
-        characterBirthdate: '',
-        characterPhoto: '',
+        locationName: '',
+        locationRealWord: '',
+        locationPictures: [],
         currentAction: '',
         dialog: false,
-        projectId: ''
+        projectId: '',
     }),
-
     computed: {
+        documentPath(){
+            if(this.locationId)
+                return 'https://docs.google.com/document/d/1Y-K7jLgMJI5jDaSmY5X_rp-zJ3dDt0ugfhrpleVQIRQ/edit?rm=embedded'
+        },
         currentTitle() {
             switch (this.step) {
-                case 1: return 'Character info'
+                case 1: return 'Location'
                 case 2: return 'Processing'
                 default: return 'Success'
             }
         },
+        isNew(){
+            return this.locationId ? false : true
+        },
     },
     methods: {
+        handlePictures(e){
+            this.locationPictures = e.pictures
+            console.log(e.pictures[0].thumbnail)
+        },
         close() {
             this.dialog = false;
             this.$emit('modalClosed');
         },
         resetSteps() {
             this.step = 1
-            this.characterName = ''
-            this.characterNickname = ''
-            this.characterBirthdate = ''
-            this.characterPhoto = ''
+            this.locationName = ''
+            this.locationRealWord = ''
+            this.locationPictures = []
             this.currentAction = ''
         },
-        async createCharacter() {
+        async saveLocation(){
+            if(this.isNew){
+                await this.createLocation()
+            }else{
+                await this.updateLocation()
+            }
+        },
+        async updateLocation() {
+        },
+        async createLocation() {
             this.step++
-            this.currentAction = "creating character"
+            this.currentAction = "creating location"
             console.log(this.currentAction)
             console.log(this.projectJsonFileId)
             try {
                 let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
 
-                this.currentAction = "creating character document"
-                const characterDocument = await UtilsGoogleApi.createDocument(this.characterName, projectData.characters.id)
+                this.currentAction = "creating location document"
+                const locationDocument = await UtilsGoogleApi.createDocument(this.locationName, projectData.locations.id)
                 
-                this.currentAction = "saving character data"
+                this.currentAction = "saving location data"
                 let content = {
-                    name: this.characterName,
-                    nickname: this.characterNickname,
-                    birthdate: this.characterBirthdate,
-                    photo: this.characterPhoto,
-                    document: characterDocument.id
+                    name: this.locationName,
+                    realWorld: this.locationRealWorld,
+                    pictures: this.locationPictures,
+                    document: locationDocument.id
                 }
 
-                const characterData = await UtilsGoogleApi.createJson(this.characterName, projectData.characters.id, content)
+                const locationData = await UtilsGoogleApi.createJson(this.locationName, projectData.locations.id, content)
                 
-                this.currentAction = `updating project character list`
+                this.currentAction = `updating project location list`
                 projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
-                projectData.characters.list.push(
+                projectData.locations.list.push(
                     {
-                        name: this.characterName,
-                        thumbnail: this.characterPhoto,
-                        file: characterData.id,
+                        name: this.locationName,
+                        thumbnail: this.locationPictures.length > 0 ? this.locationPictures[0].thumbnail : '',
+                        file: locationData.id,
                     }
                 )
 
@@ -137,13 +150,13 @@ export default {
 
                 await UtilsGoogleApi.updateJson(this.projectJsonFileId, projectData)
 
-                this.currentAction = "character created"
+                this.currentAction = "location created"
                 console.log(this.currentAction)
                 this.step++
             }
             catch (err) {
                 console.error(err);
-                this.currentAction = "error creating character"
+                this.currentAction = "error creating location"
                 console.log(this.currentAction)
                 this.dialog = false
                 return;

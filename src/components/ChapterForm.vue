@@ -13,12 +13,12 @@
             <v-window v-model="step">
                 <v-window-item :value="1">
                     <v-card-text>
-                        <v-text-field label="Name" placeholder="Anne Watson" v-model="characterName"></v-text-field>
-                        <v-text-field label="Nickname" placeholder="Anne" v-model="characterNickname"></v-text-field>
-                        <v-text-field label="Birthdate" type="date" v-model="characterBirthdate" ></v-text-field>
-                        <v-text-field label="Photo" v-model="characterPhoto" type="url"></v-text-field>
-                        <iframe v-if="documentPath" :src="documentPath" style="width: 100%; height: 100%" frameborder="0"
-                            allowfullscreen></iframe>
+                        <v-text-field label="Order" placeholder="1" type="number" v-model="chapterOrder"></v-text-field>
+                        <v-text-field label="Title" placeholder="The beginning" v-model="chapterTitle"></v-text-field>
+                        
+                        <character-selector label="Featured characters" :characters="allCharacters" @charactersSelected="handleSelectedCharacters"></character-selector>
+                        <scene-selector label="Featured scene" :characters="allScenes" @scenesSelected="handleSelectedScenes"></scene-selector>
+                        
                     </v-card-text>
                 </v-window-item>
                 <v-window-item :value="2">
@@ -26,7 +26,7 @@
                         <v-progress-circular color="blue-lighten-3" indeterminate :size="54"
                             :width="12"></v-progress-circular>
                         <h3 class="text-h6 font-weight-light mb-2">
-                            Saving character
+                            Saving chapter
                         </h3>
                         <span class="text-caption text-grey">{{ currentAction }}</span>
                     </div>
@@ -36,7 +36,7 @@
                     <div class="pa-4 text-center">
                         <v-icon color="blue-lighten-2" icon="mdi-thumb-up" size="x-large" variant="text"></v-icon>
                         <h3 class="text-h6 font-weight-light mb-2">
-                            Character saved
+                            Chapter saved
                         </h3>
                     </div>
                 </v-window-item>
@@ -49,7 +49,7 @@
                     Cancel
                 </v-btn>
                 <v-spacer v-if="step !== 2"></v-spacer>
-                <v-btn v-if="step === 1" variant="flat" @click="createCharacter">
+                <v-btn v-if="step === 1" variant="flat" @click="saveChapter">
                     Save
                 </v-btn>
                 <v-btn v-if="step === 3" @click="close" block>
@@ -62,99 +62,113 @@
 
 <script>
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
+import CharacterSelector from '@/components/CharacterSelector.vue';
+import SceneSelector from '@/components/SceneSelector.vue';
 export default {
-    props: ['projectJsonFileId', 'buttonIcon', 'buttonText', 'buttonColor', 'characterId'],
+    props: ['projectJsonFileId', 'buttonIcon', 'buttonText', 'chapterId', 'buttonColor'],
+    components: { CharacterSelector, SceneSelector },
     data: () => ({
         step: 1,
-        characterName: '',
-        characterNickname: '',
-        characterBirthdate: '',
-        characterPhoto: '',
-        currentAction: '',
+        chapterOrder: '',
+        chapterTitle: '',
+        chapterCharacters: [],
+        chapterScenes: [],
+        chapterLocations: [],
         dialog: false,
         projectId: '',
+        documentPath: 'https://docs.google.com/document/d/1Y-K7jLgMJI5jDaSmY5X_rp-zJ3dDt0ugfhrpleVQIRQ/edit?rm=embedded',
+        allCharacters: []
     }),
+
     computed: {
-        documentPath(){
-            if(this.characterId)
-                return 'https://docs.google.com/document/d/1Y-K7jLgMJI5jDaSmY5X_rp-zJ3dDt0ugfhrpleVQIRQ/edit?rm=embedded'
-        },
         currentTitle() {
             switch (this.step) {
-                case 1: return 'Character'
+                case 1: return 'Chapter'
                 case 2: return 'Processing'
                 default: return 'Success'
             }
         },
-        isNew(){
+        isNew() {
             return this.characterId ? false : true
         },
     },
+    async mounted(){
+        let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+        console.log(projectData.characters.list)
+        this.allCharacters = projectData.characters.list
+    }
+    ,
     methods: {
+        handleSelectedCharacters(e){
+            this.chapterCharacters = e.characters
+        },
         close() {
             this.dialog = false;
             this.$emit('modalClosed');
         },
         resetSteps() {
             this.step = 1
-            this.characterName = ''
-            this.characterNickname = ''
-            this.characterBirthdate = ''
-            this.characterPhoto = ''
-            this.currentAction = ''
+            this.chapterOrder = null
+            this.chapterTitle = ''
+            this.chapterCharacters = []
+            this.chapterScenes = []
+            this.chapterLocations = []
         },
-        async saveCharacter(){
-            if(this.isNew){
-                await this.createCharacter()
-            }else{
-                await this.updateCharacter()
+        async saveChapter() {
+            if (this.isNew) {
+                await this.createChapter()
+            } else {
+                await this.updateChapter()
             }
         },
-        async updateCharacter() {
+        async updateChapter() {
         },
-        async createCharacter() {
+        async createChapter() {
             this.step++
-            this.currentAction = "creating character"
+            this.currentAction = "creating chapter"
+
             console.log(this.currentAction)
             console.log(this.projectJsonFileId)
+
             try {
                 let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
 
-                this.currentAction = "creating character document"
-                const characterDocument = await UtilsGoogleApi.createDocument(this.characterName, projectData.characters.id)
-                
-                this.currentAction = "saving character data"
+                this.currentAction = "creating chapter document"
+                const chapterDocument = await UtilsGoogleApi.createDocument(this.chapterTitle, projectData.chapters.id)
+
+                this.currentAction = "saving chapter data"
                 let content = {
-                    name: this.characterName,
-                    nickname: this.characterNickname,
-                    birthdate: this.characterBirthdate,
-                    photo: this.characterPhoto,
-                    document: characterDocument.id
+                    order: this.chapterOrder,
+                    title: this.chapterTitle,
+                    scenes: this.chapterScenes,
+                    characters: this.chapterCharacters,
+                    locations: this.chapterLocations,
+                    document: chapterDocument.id
                 }
 
-                const characterData = await UtilsGoogleApi.createJson(this.characterName, projectData.characters.id, content)
-                
-                this.currentAction = `updating project character list`
+                const chapterData = await UtilsGoogleApi.createJson(this.chapterTitle, projectData.chapters.id, content)
+
+                this.currentAction = `updating project chapter list`
                 projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
-                projectData.characters.list.push(
+                projectData.chapters.list.push(
                     {
-                        name: this.characterName,
-                        thumbnail: this.characterPhoto,
-                        file: characterData.id,
+                        order: this.chapterOrder,
+                        title: this.chapterTitle,
+                        file: chapterData.id,
                     }
                 )
 
-                console.log('projectData',JSON.stringify(projectData))
+                console.log('projectData', JSON.stringify(projectData))
 
                 await UtilsGoogleApi.updateJson(this.projectJsonFileId, projectData)
 
-                this.currentAction = "character created"
+                this.currentAction = "chapter created"
                 console.log(this.currentAction)
                 this.step++
             }
             catch (err) {
                 console.error(err);
-                this.currentAction = "error creating character"
+                this.currentAction = "error creating chapter"
                 console.log(this.currentAction)
                 this.dialog = false
                 return;

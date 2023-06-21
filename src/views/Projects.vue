@@ -6,7 +6,10 @@
     </v-layout>
     <v-container class="content" fluid>
         <project-list v-if="isVisible('projects')" :loading="loading" :projects="projects"></project-list>
-        <character-list v-if="category === 'characters'" :projectJsonFileId="projectId" @close="close"></character-list>
+        <character-list v-if="category === 'characters'" :projectJsonFileId="projectId" @close="closeCategory"></character-list>
+        <chapter-list v-if="category === 'chapters'" :projectJsonFileId="projectId" @close="closeCategory"></chapter-list>
+        <location-list v-if="category === 'locations'" :projectJsonFileId="projectId" @close="closeCategory" thumbnailsPerRow="3"></location-list>
+        <scene-list v-if="category === 'scenes'" :projectJsonFileId="projectId" @close="closeCategory" thumbnailsPerRow="3"></scene-list>
         <project v-if="isVisible('book')" :projectId="projectId"></project>
     </v-container>
 </template>
@@ -20,12 +23,15 @@ import AppToolbar from '@/components/AppToolbar.vue';
 import CreateProjectForm from '@/components/CreateProjectForm.vue';
 import DeleteProjectForm from '@/components/DeleteProjectForm.vue';
 import CharacterList from '@/components/CharacterList.vue';
+import ChapterList from '@/components/ChapterList.vue';
+import LocationList from '@/components/LocationList.vue';
 import ProjectList from '@/components/ProjectList.vue';
+import SceneList from '@/components/SceneList.vue';
 import Project from '@/components/Project.vue';
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 
 export default {
-    components: { CreateProjectForm, DeleteProjectForm, AppToolbar, ProjectList, Project, CharacterList },
+    components: { CreateProjectForm, DeleteProjectForm, AppToolbar, ProjectList, Project, CharacterList, ChapterList, LocationList, SceneList },
     data: () => ({
         tokenClient: null,
         CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID,
@@ -81,21 +87,9 @@ export default {
         },
         isVisible(view) {
             return this.view == view
-        }
-        ,
-        close(category) {
-            console.log('close', category)
-
-            const closeActions = {
-                "category": () => {
-                    var query = this.$route.query
-                    console.log(query)
-                    delete query.category
-                    console.log(query)
-                    this.$router.push({ query })
-                },
-            }
-            closeActions[category]()
+        },
+        closeCategory(){
+            this.$router.push({ query: { view: 'book', projectId: this.projectId } })
         },
         toolbarAction(action) {
             console.log('doSomething', action)
@@ -105,6 +99,9 @@ export default {
                 "refresh": this.listFiles,
                 "projects": () => this.$router.push({ query: { view: 'projects' } }),
                 "characters": () => this.$router.push({ query: { view: 'book', projectId: this.projectId, category: 'characters' } }),
+                "chapters": () => this.$router.push({ query: { view: 'book', projectId: this.projectId, category: 'chapters' } }),
+                "locations": () => this.$router.push({ query: { view: 'book', projectId: this.projectId, category: 'locations' } }),
+                "scenes": () => this.$router.push({ query: { view: 'book', projectId: this.projectId, category: 'scenes' } }),
                 "close-category": () => this.$router.push({ query: { view: 'book', projectId: this.projectId, } }),
             }
 
