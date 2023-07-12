@@ -27,6 +27,16 @@
 
                 <v-window-item :value="2">
                     <div class="pa-4 text-center">
+                        <v-progress-circular color="blue-lighten-3" indeterminate :size="54"
+                            :width="12"></v-progress-circular>
+                        <h3 class="text-h6 font-weight-light mb-2">
+                            Deleting project
+                        </h3>
+                    </div>
+                </v-window-item>
+
+                <v-window-item :value="3">
+                    <div class="pa-4 text-center">
                         <v-icon color="green-lighten-2" icon="mdi-recycle" size="x-large" variant="text"></v-icon>
                         <h3 class="text-h6 font-weight-light mb-2">
                            Project deleted
@@ -37,7 +47,7 @@
 
             <v-divider v-if="step === 1"></v-divider>
 
-            <v-card-actions>
+            <v-card-actions v-if="step !== 2">
                 <v-btn v-if="step === 1" color="error" variant="flat" @click.stop="close">
                     Cancel
                 </v-btn>
@@ -45,7 +55,7 @@
                 <v-btn v-if="step === 1" color="primary" variant="flat" @click="deleteProject" :disabled="!typedSafeWord">
                     DELETE
                 </v-btn>
-                <v-btn v-if="step === 2" color="red" variant="flat" block @click.stop="close">
+                <v-btn v-if="step === 3" color="red" variant="flat" block @click.stop="close">
                     Close
                 </v-btn>
             </v-card-actions>
@@ -57,9 +67,10 @@
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {
     props: ['projectFolderId','projectJsonId','novelDocsJsonId'],
+    emits: ['modalClosed'],
     data: () => ({
         step: 1,
-        currentTitle: ['Are you sure?', 'Success'],
+        currentTitle: ['Are you sure?', 'Processing', 'Success'],
         safeWord: 'DELETE',
         dialog: false,
         fieldSafeWord: ''
@@ -75,6 +86,7 @@ export default {
             this.$emit('modalClosed');
         },
         async deleteProject() {
+            this.step = 2
             try{
                 await UtilsGoogleApi.deleteFile(this.projectFolderId);
             }catch(err){
@@ -85,7 +97,7 @@ export default {
             console.log('novelDocsData',JSON.stringify(novelDocsData))
             await UtilsGoogleApi.updateJson(this.novelDocsJsonId, novelDocsData)
 
-            this.step = 2
+            this.step = 3
         },
     }
 }

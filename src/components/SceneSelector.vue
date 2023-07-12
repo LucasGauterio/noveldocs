@@ -31,6 +31,7 @@
   <script>
   export default {
     props: ['scenes','label'],
+    emits: ['scenesSelected'],
     data() {
       return {
         selectedScenes: [],

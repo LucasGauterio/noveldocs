@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent @input="handleModalInput">
+    <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent>
         <template v-slot:activator="{ props }">
             <v-btn v-bind="props" @click.stop="resetSteps" :color="buttonColor">
                 {{ buttonText }}
@@ -64,6 +64,7 @@
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {
     props: ['projectJsonFileId', 'buttonIcon', 'buttonText', 'buttonColor', 'characterId'],
+    emits: ['modalClosed'],
     data: () => ({
         step: 1,
         characterName: '',

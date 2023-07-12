@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent @input="handleModalInput">
+    <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent>
         <template v-slot:activator="{ props }">
             <v-btn v-bind="props" @click.stop="resetSteps" :color="buttonColor">
                 {{ buttonText }}
@@ -17,7 +17,8 @@
                         <v-text-field label="Title" placeholder="The beginning" v-model="chapterTitle"></v-text-field>
                         
                         <character-selector label="Featured characters" :characters="allCharacters" @charactersSelected="handleSelectedCharacters"></character-selector>
-                        <scene-selector label="Featured scene" :characters="allScenes" @scenesSelected="handleSelectedScenes"></scene-selector>
+                        <scene-selector label="Featured scenes" :scenes="allScenes" @scenesSelected="handleSelectedScenes"></scene-selector>
+                        <location-selector label="Featured locations" :locations="allLocations" @locationsSelected="handleSelectedLocations"></location-selector>
                         
                     </v-card-text>
                 </v-window-item>
@@ -64,9 +65,11 @@
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 import CharacterSelector from '@/components/CharacterSelector.vue';
 import SceneSelector from '@/components/SceneSelector.vue';
+import LocationSelector from '@/components/LocationSelector.vue';
 export default {
     props: ['projectJsonFileId', 'buttonIcon', 'buttonText', 'chapterId', 'buttonColor'],
-    components: { CharacterSelector, SceneSelector },
+    emits: ['modalClosed'],
+    components: { CharacterSelector, SceneSelector, LocationSelector },
     data: () => ({
         step: 1,
         chapterOrder: '',
@@ -96,11 +99,18 @@ export default {
         let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
         console.log(projectData.characters.list)
         this.allCharacters = projectData.characters.list
+        this.allScenes = projectData.scenes.list
     }
     ,
     methods: {
         handleSelectedCharacters(e){
             this.chapterCharacters = e.characters
+        },
+        handleSelectedCharacters(e){
+            this.chapterScenes = e.scenes
+        },
+        handleSelectedLocations(e){
+            this.chapterLocations = e.locations
         },
         close() {
             this.dialog = false;

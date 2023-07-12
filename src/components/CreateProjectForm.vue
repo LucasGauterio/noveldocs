@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent @input="handleModalInput">
+    <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent>
         <v-card class="mx-auto" max-width="500">
             <v-card-title class="text-h6 font-weight-regular justify-space-between">
                 <v-avatar color="primary" size="24" v-text="step"></v-avatar>
@@ -74,25 +74,24 @@
                 <v-btn v-if="step === 3" variant="flat" @click="createProject">
                     Done
                 </v-btn>
-                <v-btn v-if="step === 5" color="primary" variant="flat" block>
-                    <router-link :to="{name: 'Project', params: {projectId: this.projectJsonId} }" @click.stop="close">
-                        <v-list-tile-action>
-                            <v-icon class="white--text">mdi-book</v-icon>
-                        </v-list-tile-action>
-                        <v-list-tile-content>
-                            <v-list-tile-title class="white--text">Open project</v-list-tile-title>
-                        </v-list-tile-content>
-                    </router-link>
+                <v-btn v-if="step === 5" color="primary" variant="flat" block @click.stop="openProject">
+                    <v-icon>mdi-book</v-icon>
+                    Open project
                 </v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
-
+<style scoped>
+.openBook {
+    all: unset;    
+}
+</style>
 <script>
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {
     props: ['novelDocsJsonId','novelDocsFolderId','open'],
+    emits: ['modalClosed'],
     data: () => ({
         dialog: false,
         step: 1,
@@ -108,9 +107,6 @@ export default {
         projectId: '',
         projectJsonId: '',
     }),
-    mounted() {
-        this.dialog = this.open;
-    },
     computed: {
         currentTitle() {
             switch (this.step) {
@@ -126,6 +122,10 @@ export default {
         close() {
             this.dialog = false;
             this.$emit('modalClosed');
+        },
+        openProject(){
+            close()
+            this.$router.push({ query: { view: 'book', projectId: this.projectId } })
         },
         resetSteps() {
             this.step = 1

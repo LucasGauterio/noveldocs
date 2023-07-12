@@ -1,18 +1,17 @@
 <template>
     <v-list>
-        <v-progress-linear v-if="loading" indeterminate height="4" color="secondary"></v-progress-linear>
-        <v-list-tile v-for="project in projects" :key="project.id">
-            <v-card class="mb-2" :title="project.name" :subtitle="project.projectJsonId" max-width="1024px">
+        <v-list-item>
+            <v-card v-for="project in projects" :key="project.id" class="mb-2" :title="project.name" :subtitle="project.projectJsonId" max-width="1024px">
                 <v-card-actions>
                     <delete-project-form :novelDocsJsonId="novelDocsFileJsonId" :projectFolderId="project.folderId"
                         :projectJsonId="project.projectJsonId" @modalClosed="handleModalClosed"></delete-project-form>
                     <v-col class="text-right">
                         <v-btn variant="tonal" color="blue"
-                            @click.stop="this.$router.push({ query: { view: 'book', projectId: project.projectJsonId } })">Open</v-btn>
+                            @click.stop="openProject(project.projectJsonId)">Open</v-btn>
                     </v-col>
                 </v-card-actions>
             </v-card>
-        </v-list-tile>
+        </v-list-item>
     </v-list>
 </template>
 <style></style>
@@ -22,6 +21,15 @@ import DeleteProjectForm from '@/components/DeleteProjectForm.vue';
 export default {
     name: 'project-list',
     components: { DeleteProjectForm },
-    props: { loading: Boolean, projects: Array },
+    props: { loading: Boolean, projects: Array, novelDocsFileJsonId: String },
+    emits: ['modelClosed'],
+    methods: {
+        openProject(id){
+            this.$router.push({ query: { view: 'book', projectId: id } })
+        },
+        handleModalClosed(){            
+            this.$emit('modalClosed');
+        }
+    }
 }
 </script>
