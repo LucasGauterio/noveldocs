@@ -78,7 +78,6 @@ export default {
     isAuthenticated() {
       this.credential = this.getDecodedCredential()
       let hasCredential = this.credential !== null && this.credential !== undefined && this.credential.email !== undefined
-      console.log("isAuthenticated", hasCredential)
       return hasCredential
     },
     userData() {

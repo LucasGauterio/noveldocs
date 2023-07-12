@@ -1,9 +1,9 @@
 <template>
   <v-app class="grey lighten-4">
     <AppHeader />
-    <v-content class="mb-4">
+    <v-container class="mb-4">
       <router-view />
-    </v-content>
+    </v-container>
   </v-app>
   
 </template>

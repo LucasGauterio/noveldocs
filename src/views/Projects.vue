@@ -5,11 +5,12 @@
             :novelDocsFolderId="novelDocsFolderId" @modalClosed="handleModalClosed"></create-project-form>
     </v-layout>
     <v-container class="content" fluid>
-        <project-list v-if="isVisible('projects')" :loading="loading" :projects="projects"></project-list>
-        <character-list v-if="category === 'characters'" :projectJsonFileId="projectId" @close="closeCategory"></character-list>
-        <chapter-list v-if="category === 'chapters'" :projectJsonFileId="projectId" @close="closeCategory"></chapter-list>
-        <location-list v-if="category === 'locations'" :projectJsonFileId="projectId" @close="closeCategory" thumbnailsPerRow="3"></location-list>
-        <scene-list v-if="category === 'scenes'" :projectJsonFileId="projectId" @close="closeCategory" thumbnailsPerRow="3"></scene-list>
+        <v-progress-linear v-if="loading" indeterminate height="4" color="secondary"></v-progress-linear>
+        <project-list v-if="isVisible('projects')" :projects="projects" :novelDocsFileJsonId="novelDocsFileJsonId" @modalClosed="handleModalClosed"></project-list>
+        <character-list v-if="isVisible('book','characters')" :projectJsonFileId="projectId" @close="closeCategory"></character-list>
+        <chapter-list v-if="isVisible('book','chapters')" :projectJsonFileId="projectId" @close="closeCategory"></chapter-list>
+        <location-list v-if="isVisible('book','locations')" :projectJsonFileId="projectId" @close="closeCategory" thumbnailsPerRow="3"></location-list>
+        <scene-list v-if="isVisible('book','scenes')" :projectJsonFileId="projectId" @close="closeCategory" thumbnailsPerRow="3"></scene-list>
         <project v-if="isVisible('book')" :projectId="projectId"></project>
     </v-container>
 </template>
@@ -47,10 +48,10 @@ export default {
         novelDocsFolderId: null,
         novelDocsFileJsonId: null,
         createProjectDialog: false,
-        menuOptions: ['new-project', 'refresh'],
         categories: ['charpters', 'scenes', 'characters', 'locations']
     }),
     mounted() {
+        this.loading = true;
         this.loadGoogleScripts();
     },
     computed: {
@@ -82,18 +83,18 @@ export default {
                     },
                 },
             ].find(content => content.view === this.view())
-            console.log(content.component);
             return content
         },
-        isVisible(view) {
-            return this.view == view
+        isVisible(view, category) {
+            if(!this.loading){
+                return this.view == view && this.category == category
+            }
+            return false
         },
         closeCategory(){
             this.$router.push({ query: { view: 'book', projectId: this.projectId } })
         },
         toolbarAction(action) {
-            console.log('doSomething', action)
-
             const toolbarActions = {
                 "new-project": this.createNewProject,
                 "refresh": this.listFiles,
@@ -145,11 +146,7 @@ export default {
             if (resp.error !== undefined) {
                 throw (resp);
             }
-            console.log("authCallback", JSON.stringify(resp));
-            console.log("getAuthInstance", JSON.stringify(gapi.auth2.getAuthInstance()));
-
             localStorage.setItem("accessToken", resp.access_token);
-
             await this.listFiles();
         },
         gisLoaded() {

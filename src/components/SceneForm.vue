@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent @input="handleModalInput">
+    <v-dialog v-model="dialog" transition="dialog-top-transition" width="auto" persistent>
         <template v-slot:activator="{ props }">
             <v-btn v-bind="props" @click.stop="resetSteps" :color="buttonColor">
                 {{ buttonText }}
@@ -65,6 +65,7 @@ import PictureSelector from '@/components/PictureSelector.vue';
 export default {
     components: { PictureSelector },
     props: ['projectJsonFileId', 'buttonIcon', 'buttonText', 'buttonColor', 'sceneId'],
+    emits: ['modelClosed'],
     data: () => ({
         step: 1,
         sceneName: '',

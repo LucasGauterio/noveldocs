@@ -1,7 +1,7 @@
 <template>
         <v-autocomplete
-            v-model="selectedCharacters"
-            :items="characters"
+            v-model="selectedLocations"
+            :items="locations"
             :label="label"
             item-title="name"
             item-value="file"
@@ -14,14 +14,14 @@
             <template v-slot:chip="{ props, item }">
                 <v-chip class="ma-1" color="primary" label
                     v-bind="props"
-                    :prepend-avatar="item.raw.avatar"
+                    :prepend-avatar="item.raw.thumbnail"
                     :text="item.raw.name"
                 ></v-chip>
             </template>
             <template v-slot:item="{ props, item }">
                 <v-list-item
                     v-bind="props"
-                    :prepend-avatar="item?.raw?.photo"
+                    :prepend-avatar="item?.raw?.thumbnail"
                     :title="item?.raw?.name"
                 ></v-list-item>
             </template>
@@ -30,19 +30,19 @@
   
   <script>
   export default {
-    props: ['characters','label'],
-    emits: ['charactersSelected'],
+    props: ['locations','label'],
+    emits: ['locationsSelected'],
     data() {
       return {
-        selectedCharacters: [],
+        selectedLocations: [],
       };
     },
     methods: {
-      removeCharacter(index) {
-        this.selectedCharacters.splice(index, 1);
+      removeScene(index) {
+        this.selectedLocations.splice(index, 1);
       },
-      characterSelected(){
-        this.$emit('charactersSelected', { characters: Array.from(this.selectedCharacters) });
+      sceneSelected(){
+        this.$emit('locationsSelected', { locations: Array.from(this.selectedLocations) });
       }
     },
   };
