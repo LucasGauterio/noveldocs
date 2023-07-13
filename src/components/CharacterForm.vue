@@ -78,7 +78,7 @@ export default {
     computed: {
         documentPath(){
             if(this.characterId)
-                return 'https://docs.google.com/document/d/1Y-K7jLgMJI5jDaSmY5X_rp-zJ3dDt0ugfhrpleVQIRQ/edit?rm=embedded'
+                return `https://docs.google.com/document/d/${this.characterId}/edit?rm=embedded`
         },
         currentTitle() {
             switch (this.step) {

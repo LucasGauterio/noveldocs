@@ -79,11 +79,16 @@ export default {
         chapterLocations: [],
         dialog: false,
         projectId: '',
-        documentPath: 'https://docs.google.com/document/d/1Y-K7jLgMJI5jDaSmY5X_rp-zJ3dDt0ugfhrpleVQIRQ/edit?rm=embedded',
-        allCharacters: []
+        allCharacters: [],
+        allScenes: [],
+        allLocations: []
     }),
 
     computed: {
+        documentPath(){
+            if(this.chapterId)
+                return `https://docs.google.com/document/d/${this.chapterId}/edit?rm=embedded`
+        },
         currentTitle() {
             switch (this.step) {
                 case 1: return 'Chapter'
@@ -92,7 +97,7 @@ export default {
             }
         },
         isNew() {
-            return this.characterId ? false : true
+            return this.chapterId ? false : true
         },
     },
     async mounted(){
@@ -100,6 +105,7 @@ export default {
         console.log(projectData.characters.list)
         this.allCharacters = projectData.characters.list
         this.allScenes = projectData.scenes.list
+        this.allLocations = projectData.locations.list
     }
     ,
     methods: {
