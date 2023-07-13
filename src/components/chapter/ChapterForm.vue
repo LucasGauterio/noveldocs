@@ -63,9 +63,9 @@
 
 <script>
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
-import CharacterSelector from '@/components/CharacterSelector.vue';
-import SceneSelector from '@/components/SceneSelector.vue';
-import LocationSelector from '@/components/LocationSelector.vue';
+import CharacterSelector from '@/components/character/CharacterSelector.vue';
+import SceneSelector from '@/components/scene/SceneSelector.vue';
+import LocationSelector from '@/components/location/LocationSelector.vue';
 export default {
     props: ['projectJsonFileId', 'buttonIcon', 'buttonText', 'chapterId', 'buttonColor'],
     emits: ['modalClosed'],
@@ -102,7 +102,6 @@ export default {
     },
     async mounted(){
         let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
-        console.log(projectData.characters.list)
         this.allCharacters = projectData.characters.list
         this.allScenes = projectData.scenes.list
         this.allLocations = projectData.locations.list

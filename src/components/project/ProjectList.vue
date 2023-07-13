@@ -16,7 +16,7 @@
 </template>
 <style></style>
 <script>
-import DeleteProjectForm from '@/components/DeleteProjectForm.vue';
+import DeleteProjectForm from './DeleteProjectForm.vue';
 
 export default {
     name: 'project-list',
