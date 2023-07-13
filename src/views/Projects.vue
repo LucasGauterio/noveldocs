@@ -6,12 +6,12 @@
     </v-layout>
     <v-container class="content" fluid>
         <v-progress-linear v-if="loading" indeterminate height="4" color="secondary"></v-progress-linear>
-        <project-list v-if="isVisible('projects')" :projects="projects" :novelDocsFileJsonId="novelDocsFileJsonId" @modalClosed="handleModalClosed"></project-list>
-        <character-list v-if="isVisible('book','characters')" :projectJsonFileId="projectId" @close="closeCategory"></character-list>
-        <chapter-list v-if="isVisible('book','chapters')" :projectJsonFileId="projectId" @close="closeCategory"></chapter-list>
-        <location-list v-if="isVisible('book','locations')" :projectJsonFileId="projectId" @close="closeCategory" thumbnailsPerRow="3"></location-list>
-        <scene-list v-if="isVisible('book','scenes')" :projectJsonFileId="projectId" @close="closeCategory" thumbnailsPerRow="3"></scene-list>
-        <project v-if="isVisible('book')" :projectId="projectId"></project>
+        <project-list v-if="isViewVisible('projects')" :projects="projects" :novelDocsFileJsonId="novelDocsFileJsonId" @modalClosed="handleModalClosed"></project-list>
+        <character-list v-if="isCategoryVisible('characters')" :projectJsonFileId="projectId" @close="closeCategory"></character-list>
+        <chapter-list v-if="isCategoryVisible('chapters')" :projectJsonFileId="projectId" @close="closeCategory"></chapter-list>
+        <location-list v-if="isCategoryVisible('locations')" :projectJsonFileId="projectId" @close="closeCategory" thumbnailsPerRow="3"></location-list>
+        <scene-list v-if="isCategoryVisible('scenes')" :projectJsonFileId="projectId" @close="closeCategory" thumbnailsPerRow="3"></scene-list>
+        <project v-if="isViewVisible('book')" :projectId="projectId"></project>
     </v-container>
 </template>
 <style scoped>
@@ -21,14 +21,14 @@
 </style>
 <script>
 import AppToolbar from '@/components/AppToolbar.vue';
-import CreateProjectForm from '@/components/CreateProjectForm.vue';
-import DeleteProjectForm from '@/components/DeleteProjectForm.vue';
-import CharacterList from '@/components/CharacterList.vue';
-import ChapterList from '@/components/ChapterList.vue';
-import LocationList from '@/components/LocationList.vue';
-import ProjectList from '@/components/ProjectList.vue';
-import SceneList from '@/components/SceneList.vue';
-import Project from '@/components/Project.vue';
+import CreateProjectForm from '@/components/project/CreateProjectForm.vue';
+import DeleteProjectForm from '@/components/project/DeleteProjectForm.vue';
+import CharacterList from '@/components/character/CharacterList.vue';
+import ChapterList from '@/components/chapter/ChapterList.vue';
+import LocationList from '@/components/location/LocationList.vue';
+import ProjectList from '@/components/project/ProjectList.vue';
+import SceneList from '@/components/scene/SceneList.vue';
+import Project from '@/components/project/Project.vue';
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 
 export default {
@@ -85,9 +85,15 @@ export default {
             ].find(content => content.view === this.view())
             return content
         },
-        isVisible(view, category) {
+        isViewVisible(view) {
             if(!this.loading){
-                return this.view == view && this.category == category
+                return this.view == view
+            }
+            return false
+        },
+        isCategoryVisible(category) {
+            if(!this.loading && this.isViewVisible('book')){
+                return this.category == category
             }
             return false
         },
