@@ -1322,10 +1322,10 @@ vue-router@^4.2.4:
   dependencies:
     "@vue/devtools-api" "^6.5.0"
 
-vue3-google-login@^2.0.18:
-  version "2.0.18"
-  resolved "https://registry.yarnpkg.com/vue3-google-login/-/vue3-google-login-2.0.18.tgz#3d1fe3b9ec2b25e7ae5d68c3b7f7bf3d6361b76e"
-  integrity sha512-KB9ppTijUuWk0gaA0b8bD/9tGZiQXM4qxjLG8QplipIiHJRKPmj2LkzAQUkM2OZUYjtPMbmoY1VbF+XwdVnTrw==
+vue3-google-login@^2.0.24:
+  version "2.0.24"
+  resolved "https://registry.yarnpkg.com/vue3-google-login/-/vue3-google-login-2.0.24.tgz#886e416becee6debc67db23b4585798174db604c"
+  integrity sha512-qXPKMoqvXICBHQjW2KJNySvTuJ82JvgKwNYV8dFCzc/PVqxLU876ZV1EEdX9YYXEpQ/zB8+lE0fFDysfpLT8cA==
 
 vue3-google-signin@^1.3.1:
   version "1.3.1"
