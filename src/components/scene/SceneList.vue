@@ -9,7 +9,7 @@
         </v-btn>
     </v-toolbar>
     <v-toolbar color="white" dense floating>
-      <scene-form buttonIcon="mid-plus" buttonText="Create new scene" buttonColor="green" :projectJsonFileId="projectJsonFileId" @modalClosed="handleModalClosed"></scene-form>
+      <scene-form buttonIcon="mid-plus" buttonText="Create new scene" buttonColor="green" :projectId="projectId" :novelDocs="novelDocs" @modalClosed="handleModalClosed"></scene-form>
       <v-spacer></v-spacer>
       <v-btn-toggle v-model="viewMode" mandatory>
         <v-btn value="list" icon>
@@ -99,7 +99,7 @@ import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 import SceneForm from './SceneForm.vue';
 export default {
   components: { SceneForm },
-  props: ['projectJsonFileId', 'thumbnailsPerRow'],
+  props: ['projectId', 'novelDocs', 'thumbnailsPerRow'],
   data() {
     return {
       search: '',
@@ -113,12 +113,17 @@ export default {
       this.$emit('close','scenes')
     },
     handleModalClosed() {
+      this.$emit('modalClosed');
+      console.log('emitted modalClosed')
       this.scenes = { list: []}
       this.refreshScenes()
     },
     async refreshScenes() {
       this.loading = true;
-      let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+      //let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+      let projectData = this.novelDocs.projects.list.find( p => { 
+          return p.id == this.projectId
+      })
       this.scenes = projectData.scenes
       this.loading = false;
     }

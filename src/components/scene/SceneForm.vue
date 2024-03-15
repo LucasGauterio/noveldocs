@@ -14,9 +14,14 @@
                 <v-window-item :value="1">
                     <v-card-text>
                         <v-text-field label="Name" placeholder="" v-model="sceneName"></v-text-field>
+
+                        <character-selector label="Featured characters" :characters="allCharacters" @charactersSelected="handleSelectedCharacters"></character-selector>
+                        <location-selector label="Featured locations" :locations="allLocations" @locationsSelected="handleSelectedLocations"></location-selector>
+
+                        <QuillEditor theme="snow" placeholder="Type text for this scene" v-model:content="text" contentType="html" />
                         <picture-selector label="Select or drop images of the scene here" @filesSelected="handlePictures" ></picture-selector>
-                        <iframe v-if="documentPath" :src="documentPath" style="width: 100%; height: 100%" frameborder="0"
-                            allowfullscreen></iframe>
+                        <!--<iframe v-if="documentPath" :src="documentPath" style="width: 100%; height: 100%" frameborder="0"
+                            allowfullscreen></iframe>-->
                     </v-card-text>
                 </v-window-item>
                 <v-window-item :value="2">
@@ -57,24 +62,35 @@
         </v-card>
     </v-dialog>
 </template>
-
+<style>
+    .ql-container{
+        height: 100px;
+    }
+</style>
 <script>
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 import PictureSelector from '@/components/PictureSelector.vue';
+import { QuillEditor } from '@vueup/vue-quill'
+import CharacterSelector from '@/components/character/CharacterSelector.vue';
+import LocationSelector from '@/components/location/LocationSelector.vue';
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
 
 export default {
-    components: { PictureSelector },
-    props: ['projectJsonFileId', 'buttonIcon', 'buttonText', 'buttonColor', 'sceneId'],
-    emits: ['modelClosed'],
+    components: { PictureSelector, QuillEditor, CharacterSelector, LocationSelector  },
+    props: ['projectId', 'novelDocs', 'buttonIcon', 'buttonText', 'buttonColor', 'sceneId'],
+    emits: ['modalClosed'],
     data: () => ({
         step: 1,
         sceneName: '',
         scenePictures: [],
         sceneCharacters: [],
-        sceneLocation: '',
+        sceneLocations: [],
         currentAction: '',
+        text: '',
         dialog: false,
-        projectId: '',
+        allCharacters: [],
+        allLocations: [],
+        BACKEND_API_URL: import.meta.env.VITE_BACKEND_API_URL,
     }),
     computed: {
         documentPath(){
@@ -92,10 +108,24 @@ export default {
             return this.sceneId ? false : true
         },
     },
+    mounted(){
+        //let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+        let projectData = this.novelDocs.projects.list.find( p => { 
+            return p.id == this.projectId
+        })
+        this.allCharacters = projectData.characters.list
+        this.allLocations = projectData.locations.list
+    }
+    ,
     methods: {
+        handleSelectedCharacters(e){
+            this.sceneCharacters = e.characters
+        },
+        handleSelectedLocations(e){
+            this.sceneLocations = e.locations
+        },
         handlePictures(e){
             this.scenePictures = e.pictures
-            console.log(e.pictures[0].thumbnail)
         },
         close() {
             this.dialog = false;
@@ -106,8 +136,9 @@ export default {
             this.sceneName = ''
             this.scenePictures = []
             this.sceneCharacters = []
-            this.sceneLocation = ''
+            this.sceneLocations = []
             this.currentAction = ''
+            this.text = ''
         },
         async saveScene(){
             if(this.isNew){
@@ -121,10 +152,23 @@ export default {
         async createScene() {
             this.step++
             this.currentAction = "creating scene"
-            console.log(this.currentAction)
-            console.log(this.projectJsonFileId)
             try {
-                let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+                let projectData = this.novelDocs.projects.list.find( p => { 
+                    return p.id == this.projectId
+                })
+                let content = {
+                    name: this.sceneName,
+                    pictures: this.scenePictures,
+                    thumbnail: this.scenePictures.length > 0 ? this.scenePictures[0].thumbnail : '',  
+                    text: this.text, 
+                    locations: this.sceneLocations,
+                    characters: this.sceneCharacters,
+                }
+                projectData.scenes.list.push(content)
+                this.currentAction = "saving scene"
+                await UtilsGoogleApi.putNovelDocs(this.BACKEND_API_URL,this.novelDocs)
+                this.currentAction = "scene saved"
+                /*let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
 
                 this.currentAction = "creating scene document"
                 const sceneDocument = await UtilsGoogleApi.createDocument(this.sceneName, projectData.scenes.id)
@@ -153,7 +197,7 @@ export default {
                 await UtilsGoogleApi.updateJson(this.projectJsonFileId, projectData)
 
                 this.currentAction = "scene created"
-                console.log(this.currentAction)
+                console.log(this.currentAction)*/
                 this.step++
             }
             catch (err) {

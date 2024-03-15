@@ -10,7 +10,7 @@
     </v-toolbar>
 
     <v-toolbar color="white" dense floating>
-      <chapter-form button-text="Create new chapter" button-color="green" :projectJsonFileId="projectJsonFileId" @modalClosed="handleModalClosed"></chapter-form>
+      <chapter-form button-text="Create new chapter" button-color="green" :projectId="projectId" :novelDocs="novelDocs" @modalClosed="handleModalClosed"></chapter-form>
     </v-toolbar>
 
     <v-container v-if="loading">
@@ -71,7 +71,8 @@ import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 import ChapterForm from './ChapterForm.vue';
 export default {
   components: { ChapterForm },
-  props: ['projectJsonFileId', 'thumbnailsPerRow'],
+  props: ['projectId', 'novelDocs', 'thumbnailsPerRow'],
+  emits: ['modalClosed'],
   data() {
     return {
       search: '',
@@ -85,12 +86,19 @@ export default {
       this.$emit('close','chapters')
     },
     handleModalClosed() {
+      this.$emit('modalClosed');
+      console.log('emitted modalClosed')
       this.chapters = { list: []}
       this.refreshChapters()
     },
     async refreshChapters() {
       this.loading = true
-      let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+      //let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+      
+      let projectData = this.novelDocs.projects.list.find( p => { 
+          return p.id == this.projectId
+      })
+
       this.chapters = projectData.chapters
       this.loading = false
     }

@@ -66,14 +66,15 @@
 <script>
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {
-    props: ['projectFolderId','projectJsonId','novelDocsJsonId'],
+    props: ['novelDocs','projectId'],
     emits: ['modalClosed'],
     data: () => ({
         step: 1,
         currentTitle: ['Are you sure?', 'Processing', 'Success'],
         safeWord: 'DELETE',
         dialog: false,
-        fieldSafeWord: ''
+        fieldSafeWord: '',
+        BACKEND_API_URL: import.meta.env.VITE_BACKEND_API_URL,
     }),
     computed: {
         typedSafeWord() {
@@ -87,7 +88,7 @@ export default {
         },
         async deleteProject() {
             this.step = 2
-            try{
+            /*try{
                 await UtilsGoogleApi.deleteFile(this.projectFolderId);
             }catch(err){
                 console.error(err)
@@ -95,7 +96,10 @@ export default {
             const novelDocsData = await UtilsGoogleApi.getJson(this.novelDocsJsonId)
             novelDocsData.projects = novelDocsData.projects.filter(project => project.projectJsonId !== this.projectJsonId)
             console.log('novelDocsData',JSON.stringify(novelDocsData))
-            await UtilsGoogleApi.updateJson(this.novelDocsJsonId, novelDocsData)
+            await UtilsGoogleApi.updateJson(this.novelDocsJsonId, novelDocsData)*/
+            let index = this.novelDocs.projects.list.findIndex(p => p.id === this.projectId)
+            this.novelDocs.projects.list.splice(index, 1)
+            await UtilsGoogleApi.putNovelDocs(this.BACKEND_API_URL,this.novelDocs)
 
             this.step = 3
         },

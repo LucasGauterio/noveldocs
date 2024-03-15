@@ -15,9 +15,10 @@
                     <v-card-text>
                         <v-text-field label="Name" placeholder="" v-model="locationName"></v-text-field>
                         <v-text-field label="Real world location (if exists)" placeholder="https://goo.gl/maps/qzZHdUFYDSLZQf8NA" v-model="locationRealWord"></v-text-field>
+                        <QuillEditor theme="snow" placeholder="Type text for this scene" v-model:content="text" contentType="html" />
                         <picture-selector  label="Select or drop images of the location here" @filesSelected="handlePictures" ></picture-selector>
-                        <iframe v-if="documentPath" :src="documentPath" style="width: 100%; height: 100%" frameborder="0"
-                            allowfullscreen></iframe>
+                        <!--<iframe v-if="documentPath" :src="documentPath" style="width: 100%; height: 100%" frameborder="0"
+                            allowfullscreen></iframe>-->
                     </v-card-text>
                 </v-window-item>
                 <v-window-item :value="2">
@@ -58,13 +59,18 @@
         </v-card>
     </v-dialog>
 </template>
-
+<style>
+    .ql-container{
+        height: 100px;
+    }
+</style>
 <script>
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 import PictureSelector from '@/components/PictureSelector.vue';
+import { QuillEditor } from '@vueup/vue-quill'
 export default {
-    components: { PictureSelector },
-    props: ['projectJsonFileId', 'buttonIcon', 'buttonText', 'buttonColor', 'locationId'],
+    components: { PictureSelector, QuillEditor },
+    props: ['projectId', 'novelDocs', 'buttonIcon', 'buttonText', 'buttonColor', 'locationId'],
     emits: ['modalClosed'],
     data: () => ({
         step: 1,
@@ -73,7 +79,8 @@ export default {
         locationPictures: [],
         currentAction: '',
         dialog: false,
-        projectId: '',
+        BACKEND_API_URL: import.meta.env.VITE_BACKEND_API_URL,
+        text: '',
     }),
     computed: {
         documentPath(){
@@ -94,7 +101,6 @@ export default {
     methods: {
         handlePictures(e){
             this.locationPictures = e.pictures
-            console.log(e.pictures[0].thumbnail)
         },
         close() {
             this.dialog = false;
@@ -106,6 +112,7 @@ export default {
             this.locationRealWord = ''
             this.locationPictures = []
             this.currentAction = ''
+            this.text = ''
         },
         async saveLocation(){
             if(this.isNew){
@@ -122,7 +129,23 @@ export default {
             console.log(this.currentAction)
             console.log(this.projectJsonFileId)
             try {
-                let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+                console.log(this.novelDocs)
+                let projectData = this.novelDocs.projects.list.find( p => { 
+                    return p.id == this.projectId
+                })
+                console.log(projectData)
+                let content = {
+                    name: this.locationName,
+                    realWorld: this.locationRealWorld,
+                    pictures: this.locationPictures,
+                    text: this.text
+                }
+                projectData.locations.list.push(content)
+                this.currentAction = "saving location"
+                console.log(this.novelDocs)
+                await UtilsGoogleApi.putNovelDocs(this.BACKEND_API_URL, this.novelDocs)
+                this.currentAction = "location saved"
+                /*let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
 
                 this.currentAction = "creating location document"
                 const locationDocument = await UtilsGoogleApi.createDocument(this.locationName, projectData.locations.id)
@@ -152,7 +175,7 @@ export default {
                 await UtilsGoogleApi.updateJson(this.projectJsonFileId, projectData)
 
                 this.currentAction = "location created"
-                console.log(this.currentAction)
+                console.log(this.currentAction)*/
                 this.step++
             }
             catch (err) {

@@ -6,8 +6,8 @@
                 <v-card class="mx-auto document-card" height="calc(100vh - 200px)">
                     <v-card-title>{{ this.projectMetadata.projectName }}</v-card-title>
                     <v-card-text class="iframe-wrapper">
-                        <iframe v-if="documentPath !== ''" :src="documentPath" style="width: 100%; height: 100%"
-                            frameborder="0" allowfullscreen></iframe>
+                        <!--<iframe v-if="documentPath !== ''" :src="documentPath" style="width: 100%; height: 100%"
+                            frameborder="0" allowfullscreen></iframe>-->
                     </v-card-text>
                 </v-card>
             </v-col>
@@ -33,9 +33,10 @@ import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {
     name: 'project',
     components: {},
-    props: ['projectId'],
+    props: ['novelDocs','projectId'],
     data: () => ({
         loading: true,
+        projectMetadata: {},
     }),
     async mounted(){
         await this.findDocument();
@@ -43,8 +44,11 @@ export default {
     },
     methods: {
         async findDocument() {
-            this.projectMetadata = await UtilsGoogleApi.getJson(this.projectId)
-            this.documentPath = `https://docs.google.com/document/d/${this.projectMetadata.document.id}/edit?rm=embedded&embedded=true`
+            this.projectMetadata = this.novelDocs.projects.list.find( p => { 
+                return p.id == this.projectId
+            })
+            /*this.projectMetadata = await UtilsGoogleApi.getJson(this.projectId)
+            this.documentPath = `https://docs.google.com/document/d/${this.projectMetadata.document.id}/edit?rm=embedded&embedded=true`*/
         },
     }
 }
