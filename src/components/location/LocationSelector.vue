@@ -4,7 +4,7 @@
             :items="locations"
             :label="label"
             item-title="name"
-            item-value="file"
+            item-value="item.raw"
             clearable
             outlined
             chips
@@ -41,9 +41,11 @@
       removeScene(index) {
         this.selectedLocations.splice(index, 1);
       },
-      sceneSelected(){
-        this.$emit('locationsSelected', { locations: Array.from(this.selectedLocations) });
-      }
     },
+    watch: {
+      selectedLocations(){
+        this.$emit('locationsSelected', { locations: this.locations.filter(loc => this.selectedLocations.includes(loc.name)) })
+      }
+    }
   };
   </script>

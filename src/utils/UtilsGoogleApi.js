@@ -1,4 +1,10 @@
+
+import VueCookies from 'vue-cookies'
+
+
 class UtilsGoogleApi {
+
+
   static async createFolder(name, parentFolderId) {
     console.log(`create folder ${name}`);
     let response = await gapi.client.drive.files.create({
@@ -62,6 +68,7 @@ class UtilsGoogleApi {
 
   static async updateJson(id, content) {
     const jsonContent = JSON.stringify(content);
+    
     console.log("content", jsonContent);
 
     var accessToken = gapi.auth.getToken().access_token;
@@ -97,12 +104,73 @@ class UtilsGoogleApi {
   }
 
   static async getJson(id) {
+
     const response = await gapi.client.drive.files.get({
       fileId: id,
       alt: "media",
     });
     const jsonObject = JSON.parse(response.body);
     return jsonObject;
+  }
+
+  static async getNovelDocs(url) {
+    var idToken = VueCookies.get("credential");
+    var body;
+    try{
+      let response = await fetch(
+        url+"/api/",
+        {
+          method: "GET",
+          headers: new Headers({ Authorization: "Bearer " + idToken })
+        }
+      );
+      body = await response.json()
+    }catch(err){
+      console.log("NovelDocs not found")
+    }
+    return body;
+  }
+
+  static async postNovelDocs(url,content) {
+    const jsonContent = JSON.stringify(content);
+    var idToken = VueCookies.get("credential");
+    let body;
+    try{
+      let response = await fetch(
+        url+"/api/",
+        {
+          method: "POST",
+          headers: new Headers({ Authorization: "Bearer " + idToken , "Content-Type": "application/json"}),
+          body: jsonContent,
+        }
+      );
+      body = await response.json();
+    }catch(err){
+      console.error("NovelDocs error", err)
+    }
+    return body;
+  }
+
+
+  static async putNovelDocs(url,content) {
+    const jsonContent = JSON.stringify(content);
+    var idToken = VueCookies.get("credential");
+    let body;
+    //let api = "https://noveldocsapi-651036b336f1.herokuapp.com";
+    try{
+      let response = await fetch(
+        url+"/api/",
+        {
+          method: "PUT",
+          headers: new Headers({ Authorization: "Bearer " + idToken , "Content-Type": "application/json"}),
+          body: jsonContent,
+        }
+      );
+      body = await response.json();
+    }catch(err){
+      console.error("NovelDocs error", err)
+    }
+    return body;
   }
 
   

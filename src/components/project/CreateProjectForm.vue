@@ -74,9 +74,8 @@
                 <v-btn v-if="step === 3" variant="flat" @click="createProject">
                     Done
                 </v-btn>
-                <v-btn v-if="step === 5" color="primary" variant="flat" block @click.stop="openProject">
-                    <v-icon>mdi-book</v-icon>
-                    Open project
+                <v-btn v-if="step === 5" color="primary" variant="flat" block @click.stop="close">
+                    Close
                 </v-btn>
             </v-card-actions>
         </v-card>
@@ -90,7 +89,7 @@
 <script>
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {
-    props: ['novelDocsJsonId','novelDocsFolderId','open'],
+    props: ['novelDocsJsonId','novelDocsFolderId','open','novelDocs'],
     emits: ['modalClosed'],
     data: () => ({
         dialog: false,
@@ -106,6 +105,7 @@ export default {
         dialog: false,
         projectId: '',
         projectJsonId: '',
+        BACKEND_API_URL: import.meta.env.VITE_BACKEND_API_URL,
     }),
     computed: {
         currentTitle() {
@@ -120,11 +120,12 @@ export default {
     },
     methods: {
         close() {
-            this.dialog = false;
-            this.$emit('modalClosed');
+            this.dialog = false
+            this.resetSteps()
+            this.$emit('modalClosed')
         },
         openProject(){
-            close()
+            this.close()
             this.$router.push({ query: { view: 'book', projectId: this.projectId } })
         },
         resetSteps() {
@@ -144,16 +145,18 @@ export default {
         },
         async createProject() {
             this.step++
-            this.currentAction = "creating project folder"
+            //this.currentAction = "creating project folder"
             console.log(this.currentAction)
-            try {                
-                const projectFolder = await UtilsGoogleApi.createFolder(this.projectName, this.novelDocsFolderId)
-
-                this.projectId = projectFolder.id
-
-                this.currentAction = "creating document"
-                let projectDocument = await UtilsGoogleApi.createDocument('book', this.projectId)
+            try {
+                const projectJson = await this.createProjectData(this.novelDocs)
                 
+                //const projectFolder = await UtilsGoogleApi.createFolder(this.projectName, this.novelDocsFolderId)
+
+                //this.projectId = projectFolder.id
+
+                //this.currentAction = "creating document"
+                //let projectDocument = await UtilsGoogleApi.createDocument('book', this.projectId)
+                /*
                 var items = {
                     folderId: this.projectId,
                     document: { id: projectDocument.id, },
@@ -185,7 +188,7 @@ export default {
                 await UtilsGoogleApi.updateJson(this.novelDocsJsonId, novelDocsData)
 
                 this.currentAction = "project created"
-                console.log(this.currentAction)
+                console.log(this.currentAction)*/
                 this.step++
             }
             catch (err) {
@@ -197,23 +200,28 @@ export default {
             }
 
         },
-        async createProjectData(id, items) {
+        async createProjectData(novelDocs) {
             this.currentAction = `saving project data`
             console.log(this.currentAction)
             try {
-                const content = {
+                const project = {
                     projectName: this.projectName,
                     description: this.description,
                     finishWritingDate: this.finishWritingDate,
                     finishEditingDate: this.finishEditingDate,
                     finishPublishDate: this.finishPublishDate,
                     wordGoal: this.wordGoal,
-                    ...items
+                    chapters: {list: []},
+                    scenes: {list: []},
+                    locations: {list: []},
+                    characters: {list: []},
                 }
-                
+                novelDocs.projects.list.push(project);
+                /*
                 const novelDocsProjectData = await UtilsGoogleApi.createJson('project', id, content)
-                console.log(`project data saved`)
-                return novelDocsProjectData
+                console.log(`project data saved`)*/
+                return await UtilsGoogleApi.putNovelDocs(this.BACKEND_API_URL,novelDocs)
+                //return novelDocsProjectData
             }
             catch (err) {
                 console.log(err.message);

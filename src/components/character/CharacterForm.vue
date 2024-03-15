@@ -16,9 +16,10 @@
                         <v-text-field label="Name" placeholder="Anne Watson" v-model="characterName"></v-text-field>
                         <v-text-field label="Nickname" placeholder="Anne" v-model="characterNickname"></v-text-field>
                         <v-text-field label="Birthdate" type="date" v-model="characterBirthdate" ></v-text-field>
-                        <v-text-field label="Photo" v-model="characterPhoto" type="url"></v-text-field>
-                        <iframe v-if="documentPath" :src="documentPath" style="width: 100%; height: 100%" frameborder="0"
-                            allowfullscreen></iframe>
+                        <picture-selector label="Select or drop images of the scene here" @filesSelected="handlePictures" ></picture-selector>
+                        <QuillEditor theme="snow" placeholder="Type text for this scene" v-model:content="text" contentType="html" />
+                        <!--<iframe v-if="documentPath" :src="documentPath" style="width: 100%; height: 100%" frameborder="0"
+                            allowfullscreen></iframe>-->
                     </v-card-text>
                 </v-window-item>
                 <v-window-item :value="2">
@@ -59,21 +60,31 @@
         </v-card>
     </v-dialog>
 </template>
-
+<style>
+    .ql-container{
+        height: 100px;
+    }
+</style>
 <script>
+import PictureSelector from '@/components/PictureSelector.vue';
+import { QuillEditor } from '@vueup/vue-quill'
 import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 export default {
-    props: ['projectJsonFileId', 'buttonIcon', 'buttonText', 'buttonColor', 'characterId'],
+    components: { PictureSelector, QuillEditor },
+    props: ['projectId', 'novelDocs', 'buttonIcon', 'buttonText', 'buttonColor', 'characterId'],
     emits: ['modalClosed'],
     data: () => ({
         step: 1,
+        characterId: null,
         characterName: '',
         characterNickname: '',
+        characterPictures: [],
         characterBirthdate: '',
         characterPhoto: '',
         currentAction: '',
+        text: '',
         dialog: false,
-        projectId: '',
+        BACKEND_API_URL: import.meta.env.VITE_BACKEND_API_URL,
     }),
     computed: {
         documentPath(){
@@ -92,17 +103,24 @@ export default {
         },
     },
     methods: {
+        handlePictures(e){
+            this.characterPictures = e.pictures
+            console.log(e.pictures[0].thumbnail)
+        },
         close() {
             this.dialog = false;
             this.$emit('modalClosed');
         },
         resetSteps() {
             this.step = 1
+            this.characterId = null
             this.characterName = ''
             this.characterNickname = ''
+            this.characterPictures = []
             this.characterBirthdate = ''
             this.characterPhoto = ''
             this.currentAction = ''
+            this.text = ''
         },
         async saveCharacter(){
             if(this.isNew){
@@ -119,6 +137,27 @@ export default {
             console.log(this.currentAction)
             console.log(this.projectJsonFileId)
             try {
+
+                console.log(this.novelDocs)
+                let projectData = this.novelDocs.projects.list.find( p => { 
+                    return p.id == this.projectId
+                })
+                console.log(projectData)
+                let content = {
+                    id: this.characterId,
+                    name: this.characterName,
+                    nickname: this.characterNickname,
+                    birthdate: this.characterBirthdate,
+                    thumbnail: this.characterPictures.length > 0 ? this.characterPictures[0].thumbnail : '',
+                    pictures: this.characterPictures,
+                    text: this.text,
+                }
+                projectData.characters.list.push(content)
+                this.currentAction = "saving character"
+                console.log(this.novelDocs)
+                await UtilsGoogleApi.putNovelDocs(this.BACKEND_API_URL,this.novelDocs)
+                this.currentAction = "character saved"
+/*
                 let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
 
                 this.currentAction = "creating character document"
@@ -150,7 +189,7 @@ export default {
                 await UtilsGoogleApi.updateJson(this.projectJsonFileId, projectData)
 
                 this.currentAction = "character created"
-                console.log(this.currentAction)
+                console.log(this.currentAction)*/
                 this.step++
             }
             catch (err) {

@@ -9,7 +9,7 @@
         </v-btn>
     </v-toolbar>
     <v-toolbar color="white" dense floating>
-      <location-form buttonIcon="mid-plus" buttonText="Create new location" buttonColor="green" :projectJsonFileId="projectJsonFileId" @modalClosed="handleModalClosed"></location-form>
+      <location-form buttonIcon="mid-plus" buttonText="Create new location" buttonColor="green" :projectId="projectId" :novelDocs="novelDocs" @modalClosed="handleModalClosed"></location-form>
       <v-spacer></v-spacer>
       <v-btn-toggle v-model="viewMode" mandatory>
         <v-btn value="list" icon>
@@ -99,7 +99,7 @@ import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 import LocationForm from './LocationForm.vue';
 export default {
   components: { LocationForm },
-  props: ['projectJsonFileId', 'thumbnailsPerRow'],
+  props: ['projectId', 'novelDocs', 'thumbnailsPerRow'],
   data() {
     return {
       search: '',
@@ -113,12 +113,17 @@ export default {
       this.$emit('close','locations')
     },
     handleModalClosed() {
+      this.$emit('modalClosed');
+      console.log('emitted modalClosed')
       this.locations = { list: []}
       this.refreshLocations()
     },
     async refreshLocations() {
       this.loading = true;
-      let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+      //let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+      let projectData = this.novelDocs.projects.list.find( p => { 
+          return p.id == this.projectId
+      })
       this.locations = projectData.locations
       this.loading = false;
     }

@@ -5,7 +5,7 @@
         prepend-icon="mdi-image"
         accept="image/png, image/jpeg" :label="labelText" @change="handleFileSelect"
         @drop="handleDrop" @dragover.prevent show-size multiple
-        ref="fileInput"></v-file-input>
+        ref="fileInput"></v-file-input>        
     </v-row>
     <v-container fluid class="thumbnail-container">
       <v-row>

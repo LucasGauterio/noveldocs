@@ -67,7 +67,7 @@ import CharacterSelector from '@/components/character/CharacterSelector.vue';
 import SceneSelector from '@/components/scene/SceneSelector.vue';
 import LocationSelector from '@/components/location/LocationSelector.vue';
 export default {
-    props: ['projectJsonFileId', 'buttonIcon', 'buttonText', 'chapterId', 'buttonColor'],
+    props: ['projectId', 'novelDocs', 'buttonIcon', 'buttonText', 'chapterId', 'buttonColor'],
     emits: ['modalClosed'],
     components: { CharacterSelector, SceneSelector, LocationSelector },
     data: () => ({
@@ -78,10 +78,10 @@ export default {
         chapterScenes: [],
         chapterLocations: [],
         dialog: false,
-        projectId: '',
         allCharacters: [],
         allScenes: [],
-        allLocations: []
+        allLocations: [],
+        BACKEND_API_URL: import.meta.env.VITE_BACKEND_API_URL,
     }),
 
     computed: {
@@ -101,7 +101,14 @@ export default {
         },
     },
     async mounted(){
-        let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+        //let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+        console.log(this.novelDocs)
+        let projectData = this.novelDocs.projects.list.find( p => { 
+            console.log(p.id)
+            console.log(this.projectId)
+            return p.id == this.projectId
+        })
+        console.log(projectData)
         this.allCharacters = projectData.characters.list
         this.allScenes = projectData.scenes.list
         this.allLocations = projectData.locations.list
@@ -142,11 +149,30 @@ export default {
             this.step++
             this.currentAction = "creating chapter"
 
-            console.log(this.currentAction)
-            console.log(this.projectJsonFileId)
+            //console.log(this.currentAction)
+            //console.log(this.projectJsonFileId)
 
             try {
-                let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+                console.log(this.novelDocs)
+                let projectData = this.novelDocs.projects.list.find( p => { 
+                    return p.id == this.projectId
+                })
+                console.log(projectData)
+                let content = {
+                    chapterOrder: this.chapterOrder,
+                    title: this.chapterTitle,
+                    scenes: this.chapterScenes,
+                    characters: this.chapterCharacters,
+                    locations: this.chapterLocations,
+                    document: ""
+                }
+                projectData.chapters.list.push(content)
+                this.currentAction = "saving chapter"
+                console.log(this.novelDocs)
+                await UtilsGoogleApi.putNovelDocs(this.novelDocs)
+                this.currentAction = "chapter saved"
+
+                /*let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
 
                 this.currentAction = "creating chapter document"
                 const chapterDocument = await UtilsGoogleApi.createDocument(this.chapterTitle, projectData.chapters.id)
@@ -178,7 +204,7 @@ export default {
                 await UtilsGoogleApi.updateJson(this.projectJsonFileId, projectData)
 
                 this.currentAction = "chapter created"
-                console.log(this.currentAction)
+                console.log(this.currentAction)*/
                 this.step++
             }
             catch (err) {

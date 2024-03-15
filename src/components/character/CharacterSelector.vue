@@ -4,7 +4,7 @@
             :items="characters"
             :label="label"
             item-title="name"
-            item-value="file"
+            item-value="item.raw"
             clearable
             outlined
             chips
@@ -40,10 +40,12 @@
     methods: {
       removeCharacter(index) {
         this.selectedCharacters.splice(index, 1);
-      },
-      characterSelected(){
-        this.$emit('charactersSelected', { characters: Array.from(this.selectedCharacters) });
       }
     },
+    watch:{
+        selectedCharacters(){
+          this.$emit('charactersSelected', { characters: this.characters.filter(char => this.selectedCharacters.includes(char.name)) })
+        }
+    }
   };
   </script>

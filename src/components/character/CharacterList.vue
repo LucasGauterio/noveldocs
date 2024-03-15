@@ -9,7 +9,7 @@
         </v-btn>
     </v-toolbar>
     <v-toolbar color="white" dense floating>
-      <character-form buttonIcon="mid-plus" buttonText="Create new character" buttonColor="green" :projectJsonFileId="projectJsonFileId" @modalClosed="handleModalClosed"></character-form>
+      <character-form buttonIcon="mid-plus" buttonText="Create new character" buttonColor="green" :projectId="projectId" :novelDocs="novelDocs" @modalClosed="handleModalClosed"></character-form>
       <v-spacer></v-spacer>
       <v-btn-toggle v-model="viewMode" mandatory>
         <v-btn value="list" icon>
@@ -99,7 +99,8 @@ import UtilsGoogleApi from '@/utils/UtilsGoogleApi.js';
 import CharacterForm from './CharacterForm.vue';
 export default {
   components: { CharacterForm },
-  props: ['projectJsonFileId', 'thumbnailsPerRow'],
+  props: ['projectId', 'novelDocs', 'thumbnailsPerRow'],
+  emits: ['modalClosed'],
   data() {
     return {
       /*characters: Array.from({ length: 10 }, (_, index) => ({
@@ -118,12 +119,17 @@ export default {
       this.$emit('close','characters')
     },
     handleModalClosed() {
+      this.$emit('modalClosed');
+      console.log('emitted modalClosed')
       this.characters = { list: []}
       this.refreshCharacters()
     },
     async refreshCharacters() {
       this.loading = true;
-      let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+      //let projectData = await UtilsGoogleApi.getJson(this.projectJsonFileId)
+      let projectData = this.novelDocs.projects.list.find( p => { 
+          return p.id == this.projectId
+      })
       this.characters = projectData.characters
       this.loading = false;
     }
