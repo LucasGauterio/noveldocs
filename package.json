@@ -13,7 +13,7 @@
     "@vueup/vue-quill": "^1.2.0",
     "core-js": "^3.33.0",
     "roboto-fontface": "*",
-    "vue": "^3.3.4",
+    "vue": "^3.4.21",
     "vue-cookies": "^1.8.3",
     "vue-facing-decorator": "^2.1.20",
     "vue-i18n": "^9.2.2",
